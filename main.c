@@ -13,7 +13,7 @@
 
 #define TRUE 1
 #define FALSE 0
-#define SHELL_NAME "mishell"
+#define SHELL_NAME "tushell"
 #define LINE_BUFF_SIZE 100 
 
 typedef char* string;
