@@ -13,7 +13,12 @@ typedef int bool;
 #define STR_EQ(s1,s2) strcmp(s1,s2) == 0
 #define COMMAND_IS_(s) STR_EQ(command->name, s)
 
-
+command_t* init_command(string name, string* args, CommandType type){
+    command_t* comm = (command_t*)malloc(sizeof(command_t));
+    comm->name = name;
+    comm->args = args;
+    comm->type = type;
+}
 
 void execute(command_t* command){    
     switch (command->type)
