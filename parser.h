@@ -5,6 +5,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-char** split(char* str);
+char** split(char* str, int* tokens_count);
 
 #endif
