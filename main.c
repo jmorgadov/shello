@@ -59,7 +59,9 @@ int main(int agrc, char **args)
         printPrompt();
         int read_count = read(STDIN_FILENO, line_buff, LINE_BUFF_SIZE);
         line_buff[read_count - 1] = 0;
-        char** line = split(line_buff);
-        execute(line[0], line);
+        int token_counts = 0;
+        char** line = split(line_buff, &token_counts);
+        print(" --- %s --- \n", line[0]);
+        execute_line(line, token_counts);
     }    
 }
