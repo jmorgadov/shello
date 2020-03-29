@@ -15,18 +15,15 @@ typedef int bool;
 #define MAX_COMMAND_IN_LINE 10
 
 command_t* init_command(char* name, char** args){
-    print("init command\n");
     command_t* comm = (command_t*)malloc(sizeof(command_t));
     comm->name = name;
     comm->args = args;
     comm->in = 0;
     comm->out = 1;  
-    print("end init command  %s --\n", name);
     return comm;
 }
 
 void resolve_pipes(command_t** commands, int len){
-    print("Resolving %d pipes\n", len);
     for (int i = 1; i < len; i++)
     {
         int p[2];
@@ -34,12 +31,9 @@ void resolve_pipes(command_t** commands, int len){
         commands[i-1]->out = p[1];
         commands[i]->in = p[0];
     }    
-    print("end resolving pipes\n");
 }
 
-
 void execute(command_t* command){    
-    print("executing command\n");
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
     }
@@ -51,22 +45,73 @@ void execute(command_t* command){
         int child_pid = 0;
         int status = 0;
         if (child_pid = fork()){
-            // waitpid(child_pid, &status, WNOHANG);
-            wait(&status);
+            waitpid(child_pid, &status,W_OK);
+            int out = command->out;
+            if (out != 0 && out != 1){
+                close(out);
+            }
+            // wait(&status);
         }
         else{
+            setbuf(stdout, NULL);
             dup2(command->in, 0);
             dup2(command->out, 1);
-            execvp(command->name, command->args);            
+            execvp(command->name, command->args);  
+            int out = command->out;
+            if (out != 0 && out != 1){
+                close(out);
+            }                  
             exit(0);
         }
     }    
 }
 
-command_t* get_command(char** command){
-    print("getting command\n");
-    command_t* temp = init_command(command[0], command + 1);
-    print("name --- %d\n", temp->out);
+char** resolve_files_in_out(char** commands, int len, int* in, int* out){
+    int infd = -1;
+    int outfd = -1;
+    char** answ = (char**)malloc(len*sizeof(char*));
+    int answ_index = 0;
+    for (int i = 0; i < len; i++)
+    {
+        if (STR_EQ(commands[i], ">")){
+            char* path = commands[i + 1];
+            i++;
+        }
+        else if (STR_EQ(commands[i], ">>")){
+            char* path = commands[i + 1];
+            i++;
+        }
+        else if (STR_EQ(commands[i], "<")){
+            char* path = commands[i + 1];
+            i++;
+        }
+        else if (STR_EQ(commands[i], "<<")){
+            char* path = commands[i + 1];
+            i++;
+        }
+        else{
+            answ[answ_index++] = commands[i];
+        }
+    }    
+    
+    char** final_answ = (char**)malloc(answ_index*sizeof(char*));
+    for (int i = 0; i < answ_index; i++)
+        final_answ[i] = answ[i];
+
+    if (infd >= 0)
+        *in = infd;
+    if (outfd >= 0)
+        *out = outfd;
+    return final_answ;    
+}
+
+command_t* get_command(char** command, int len){
+    int in = 0;
+    int out = 1;
+    char** comm = resolve_files_in_out(command, len, &in, &out);
+    command_t* temp = init_command(comm[0], comm);
+    temp->in = in;
+    temp->out = out;
     return temp;
 }
 
@@ -77,17 +122,14 @@ void execute_line(char** command_tokens, int tokens_count){
     command_t** commands = (command_t**)malloc(MAX_COMMAND_IN_LINE*sizeof(command_t*));
     int k = 0;
     int c = 0;
-    printc(RED, "Tokens count: %d\n", tokens_count);
     for (int i = 0; i <= tokens_count; i++){
-        printc(RED, "%d\n", i);
         if (i == tokens_count || STR_EQ(command_tokens[i], "|")) {
             if (c == MAX_COMMAND_IN_LINE)
             {
                 printc(RED, "Max command in line exceded\n");
                 exit(0);
             }
-            printc(RED, "   %d\n",k);
-            commands[c++] = get_command(temp_command);
+            commands[c++] = get_command(temp_command, k);
             k = 0;
         }
         else{
@@ -98,9 +140,7 @@ void execute_line(char** command_tokens, int tokens_count){
     for (int i = 0; i < c; i++)
     {        
         command_t* comm = commands[i];
-        print("name = %s\n", comm->name);
         execute(comm);
-    }
-    
+    }  
     
 }

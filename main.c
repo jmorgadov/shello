@@ -10,15 +10,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 #define TRUE 1
 #define FALSE 0
 #define SHELL_NAME "tushell"
-#define LINE_BUFF_SIZE 100 
+#define LINE_BUFF_SIZE 500 
 
 typedef char* string;
 
-char cwd[100];
+char cwd[500];
 char* line_buff;
 
 string readf(FILE *file, int size) { 
@@ -53,15 +52,15 @@ int main(int agrc, char **args)
     setbuf(stdout, NULL);
     // printIntro();
     line_buff = (char*)malloc(LINE_BUFF_SIZE * sizeof(char));
+    int buffer_index = 0;
     while (TRUE)
     {
-        getcwd(cwd, 100);
+        getcwd(cwd, 500);
         printPrompt();
         int read_count = read(STDIN_FILENO, line_buff, LINE_BUFF_SIZE);
         line_buff[read_count - 1] = 0;
         int token_counts = 0;
-        char** line = split(line_buff, &token_counts);
-        print(" --- %s --- \n", line[0]);
+        char** line = split(line_buff, &token_counts);        
         execute_line(line, token_counts);
     }    
 }
