@@ -17,7 +17,7 @@
 
 typedef char* string;
 
-char cwd[100];
+char cwd[500];
 char* line_buff;
 
 string readf(FILE *file, int size) { 
@@ -55,7 +55,7 @@ int main(int agrc, char **args)
     int buffer_index = 0;
     while (TRUE)
     {
-        getcwd(cwd, 100);
+        getcwd(cwd, 500);
         printPrompt();
         int read_count = read(STDIN_FILENO, line_buff, LINE_BUFF_SIZE);
         line_buff[read_count - 1] = 0;

@@ -33,7 +33,6 @@ void resolve_pipes(command_t** commands, int len){
     }    
 }
 
-
 void execute(command_t* command){    
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
@@ -61,14 +60,58 @@ void execute(command_t* command){
             int out = command->out;
             if (out != 0 && out != 1){
                 close(out);
-            }      
+            }                  
             exit(0);
         }
     }    
 }
 
-command_t* get_command(char** command){
-    command_t* temp = init_command(command[0], command);
+char** resolve_files_in_out(char** commands, int len, int* in, int* out){
+    int infd = -1;
+    int outfd = -1;
+    char** answ = (char**)malloc(len*sizeof(char*));
+    int answ_index = 0;
+    for (int i = 0; i < len; i++)
+    {
+        if (STR_EQ(commands[i], ">")){
+            char* path = commands[i + 1];
+            i++;
+        }
+        else if (STR_EQ(commands[i], ">>")){
+            char* path = commands[i + 1];
+            i++;
+        }
+        else if (STR_EQ(commands[i], "<")){
+            char* path = commands[i + 1];
+            i++;
+        }
+        else if (STR_EQ(commands[i], "<<")){
+            char* path = commands[i + 1];
+            i++;
+        }
+        else{
+            answ[answ_index++] = commands[i];
+        }
+    }    
+    
+    char** final_answ = (char**)malloc(answ_index*sizeof(char*));
+    for (int i = 0; i < answ_index; i++)
+        final_answ[i] = answ[i];
+
+    if (infd >= 0)
+        *in = infd;
+    if (outfd >= 0)
+        *out = outfd;
+    return final_answ;    
+}
+
+command_t* get_command(char** command, int len){
+    int in = 0;
+    int out = 1;
+    char** comm = resolve_files_in_out(command, len, &in, &out);
+    command_t* temp = init_command(comm[0], comm);
+    temp->in = in;
+    temp->out = out;
     return temp;
 }
 
@@ -86,7 +129,7 @@ void execute_line(char** command_tokens, int tokens_count){
                 printc(RED, "Max command in line exceded\n");
                 exit(0);
             }
-            commands[c++] = get_command(temp_command);
+            commands[c++] = get_command(temp_command, k);
             k = 0;
         }
         else{
