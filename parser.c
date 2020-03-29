@@ -49,5 +49,6 @@ char** split(char* str, int* tokens_count){
     answ[a++] = temp_buff;
     count++;
     *tokens_count = count;
+    
     return answ;
 }
