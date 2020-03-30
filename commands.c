@@ -4,6 +4,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "commands.h"
 #include "debug.h"
 
@@ -45,11 +48,15 @@ void execute(command_t* command){
         int child_pid = 0;
         int status = 0;
         if (child_pid = fork()){
-            waitpid(child_pid, &status,W_OK);
+            waitpid(child_pid, &status, W_OK);
             int out = command->out;
+            int in = command->out;
             if (out != 0 && out != 1){
                 close(out);
-            }
+            }        
+            if (in != 0 && in != 1){
+                close(in);                
+            } 
             // wait(&status);
         }
         else{
@@ -58,9 +65,13 @@ void execute(command_t* command){
             dup2(command->out, 1);
             execvp(command->name, command->args);  
             int out = command->out;
+            int in = command->out;
             if (out != 0 && out != 1){
-                close(out);
-            }                  
+                close(out);                
+            }        
+            if (in != 0 && in != 1){
+                close(in);                
+            }            
             exit(0);
         }
     }    
@@ -76,24 +87,40 @@ char** resolve_files_in_out(char** commands, int len, int* in, int* out){
         if (STR_EQ(commands[i], ">")){
             char* path = commands[i + 1];
             i++;
+            int fd = creat(path, O_WRONLY);
+            if (fd == -1){
+                printc(RED, "Error creating file %s\n", path);
+            }
+            else{
+                outfd = fd;
+            }
         }
         else if (STR_EQ(commands[i], ">>")){
             char* path = commands[i + 1];
             i++;
+            int fd = open(path, O_WRONLY, O_APPEND);
+            if (fd == -1){
+                printc(RED, "Error opening file %s\n", path);
+            }
+            else{
+                outfd = fd;
+            }
         }
         else if (STR_EQ(commands[i], "<")){
             char* path = commands[i + 1];
             i++;
-        }
-        else if (STR_EQ(commands[i], "<<")){
-            char* path = commands[i + 1];
-            i++;
+            int fd = open(path, O_RDONLY);
+            if (fd == -1){
+                printc(RED, "Error opening file %s\n", path);
+            }
+            else{
+                infd = fd;
+            }
         }
         else{
             answ[answ_index++] = commands[i];
         }
     }    
-    
     char** final_answ = (char**)malloc(answ_index*sizeof(char*));
     for (int i = 0; i < answ_index; i++)
         final_answ[i] = answ[i];
