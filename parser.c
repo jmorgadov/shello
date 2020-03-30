@@ -20,7 +20,6 @@ char** split(char* str, int* tokens_count){
     int j = 0;
     int a = 0;
     int i = 0;
-    int count = 0;
     while (str[i]){
         if (str[i] == '\\' && str[i + 1]){
             switch (str[i + 1])
@@ -38,7 +37,6 @@ char** split(char* str, int* tokens_count){
             answ[a++] = temp_buff;
             temp_buff = (char*)malloc(len*sizeof(char));
             j = 0; 
-            count++;
         }
         else{
             temp_buff[j++] = str[i];
@@ -47,7 +45,6 @@ char** split(char* str, int* tokens_count){
     }
     temp_buff[j++] = 0;
     answ[a++] = temp_buff;
-    count++;
-    *tokens_count = count;
+    *tokens_count = a;    
     return answ;
 }
