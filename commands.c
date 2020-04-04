@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include "commands.h"
 #include "debug.h"
+#include "history.h"
 
 typedef int bool;
 
@@ -16,6 +17,8 @@ typedef int bool;
 #define COMMAND_IS_(s) STR_EQ(command->name, s)
 
 #define MAX_COMMAND_IN_LINE 10
+
+history_h* history;
 
 command_t* init_command(char* name, char** args){
     command_t* comm = (command_t*)malloc(sizeof(command_t));
@@ -36,13 +39,24 @@ void resolve_pipes(command_t** commands, int len){
     }    
 }
 
-void execute(command_t* command){    
+void execute(command_t* command){   
+    if (history == NULL)
+        history = init_history_handler();
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
     }
     else if (COMMAND_IS_("exit")){
         exit(0);
     }    
+    else if (COMMAND_IS_("history")){        
+        char** h_lines = get_history_lines(history);
+        int max = history->count < HISTORY_MAX_SIZE ? history-> count : HISTORY_MAX_SIZE;
+        for (int i = 0; i < max; i++)
+        {
+            print("[%d] %s\n", i + 1, h_lines[i]);
+        }
+        
+    }
     else
     {
         int child_pid = 0;
@@ -75,6 +89,8 @@ void execute(command_t* command){
             exit(0);
         }
     }    
+
+    add_line(command, history);
 }
 
 char** resolve_files_in_out(char** commands, int len, int* in, int* out){
