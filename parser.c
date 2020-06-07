@@ -39,6 +39,7 @@ int count_line_tokens(char* str){
 }
 
 char** split(char* str, int* tokens_count){
+    print("\n\n");
     int len = strlen(str) + 1;
     temp_buff = (char*)malloc(len*sizeof(char));
     int t_count = count_line_tokens(str);
@@ -54,8 +55,15 @@ char** split(char* str, int* tokens_count){
     while (str[i] == ' ') { i++; }
 
     while (str[i] && str[i] != '#')
-    {
+    {        
         char current = str[i];
+
+        if (last == ' ')
+        {
+            while (str[i] == ' ') { i++; }
+            last = 0;
+            continue;
+        }
         if ((current == '\'' || current == '\"') && last != '\\')
         {
             if (on_string)
@@ -67,8 +75,8 @@ char** split(char* str, int* tokens_count){
         }
         else if(current == ' ')
         {
-            if (on_string || last != ' ')
-                temp_buff[tb_idx++] = current;
+            if (on_string)
+                temp_buff[tb_idx++] = current;            
             else
             {
                 temp_buff[tb_idx] = 0;
@@ -81,12 +89,16 @@ char** split(char* str, int* tokens_count){
         {
             temp_buff[tb_idx++] = current;
         }
-        
+        last = str[i];
 
         i++;
     }        
-    temp_buff[tb_idx++] = 0;
-    answ[a_idx++] = temp_buff;
-    *tokens_count = t_count;    
+    if (tb_idx != 0) 
+    {
+        temp_buff[tb_idx] = 0;
+        answ[a_idx++] = temp_buff;
+    }
+    *tokens_count = t_count; 
+    print("\ntokens: %d\n\n", t_count);   
     return answ;
 }
