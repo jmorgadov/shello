@@ -1,3 +1,29 @@
+/*
+Functionalities status:
+
+   No. Name           Status
+- (01) Basic -------- OK
+- (02) Basic -------- OK
+- (03) Basic -------- OK
+- (04) Basic -------- 
+- (05) Basic -------- 
+- (06) Basic -------- OK
+- (07) Basic -------- OK
+- (08) Basic -------- OK
+- (09) Multi-pipe --- Implemented (Not tested)
+- (10) Background ---
+- (11) Spaces ------- OK
+- (12) History ------ Semi-Implemented
+- (13) Ctrl+C -------
+- (14) Chain --------
+- (15) If -----------
+- (16) Multi-If -----
+- (17) Help --------- Implemented (Not tested)
+- (18) Variables ----
+*/
+
+
+
 #include "commands.h"
 #include "debug.h"
 #include "parser.h"
