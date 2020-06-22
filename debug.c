@@ -83,7 +83,29 @@ void debugc(color_t color, char* text, ...)
 }
 
 void print(char* text, ...){
-    printc(RESET, text);
+    printf("%s", RESET);
+    int i=0;
+    va_list ap;
+    int d;
+    char c, *s;
+    float f;
+    va_start(ap, text);
+    while (text[i]) {
+        if (text[i] == '%') {
+            i++;
+            switch (text[i]) {
+            case 's': s = va_arg(ap, char*); printf("%s", s); break;
+            case 'd': d = va_arg(ap, int); printf("%d", d); break;
+            case 'f': f = va_arg(ap, int); printf("%f", f); break;
+            case 'c': c = (char) va_arg(ap, int); printf("%c", c); break;
+            }
+        }
+        else
+            printf("%s", tostr(text[i]));
+        i++;        
+    }
+    va_end(ap);
+    write(1,"\033[0m", 5);
 }
 
 void printc(color_t color, char* text, ...)

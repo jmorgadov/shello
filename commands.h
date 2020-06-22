@@ -1,21 +1,17 @@
 #ifndef commandExe_H
 #define commandExe_H
 
-typedef enum{
-    system,
-    shell,
-    file,
-    special
-}CommandType;
+#define SET_IN(comm, n) comm->in = n
+#define SET_OUT(comm, n) comm->out = n
 
 typedef struct command{
     char* name;
     char** args;    
-    CommandType type;
-    command_t left;
-    command_t right;    
+    int in;
+    int out;
 }command_t;
 
 void execute(command_t* command);
-
+command_t* init_command(char* name, char** args);
+void execute_line(char** command_tokens, int tokens_count);
 #endif
