@@ -1,3 +1,29 @@
+/*
+Functionalities status:
+
+   No. Name           Status
+- (01) Basic -------- OK
+- (02) Basic -------- OK
+- (03) Basic -------- OK
+- (04) Basic -------- 
+- (05) Basic -------- 
+- (06) Basic -------- OK
+- (07) Basic -------- OK
+- (08) Basic -------- OK
+- (09) Multi-pipe --- Implemented (Not tested)
+- (10) Background ---
+- (11) Spaces ------- OK
+- (12) History ------ Semi-Implemented
+- (13) Ctrl+C -------
+- (14) Chain --------
+- (15) If -----------
+- (16) Multi-If -----
+- (17) Help --------- Implemented (Not tested)
+- (18) Variables ----
+*/
+
+
+
 #include "commands.h"
 #include "debug.h"
 #include "parser.h"
@@ -44,7 +70,7 @@ void printPrompt(){
     printc(BOLD_GREEN, "%s", SHELL_NAME);
     print(":");
     printc(BOLD_BLUE, "%s", cwd);
-    print("$");
+    print("$ ");
 }
 
 void printIntro(){
@@ -107,28 +133,39 @@ int main(int agrc, char **args)
         while (reading){
             switch (current = getch())
             {
-                case '\n':
+                case '\n':                    
                     print("%c", current);
                     reading = FALSE;
                     break;
                 case 9:
                     reading = FALSE;
+                case 127:
+                    if (buffer_index){
+                        print("\b \b"); 
+                        buffer_index--;
+                    }
+                    break;
                 default:
                     line_buff[buffer_index++] = current;
                     print("%c", current);
                     break;
             }
-            if (ends_with(line_buff, UP_ARROW_KEY)|| current  == 9){
+            if (ends_with(line_buff, UP_ARROW_KEY)|| current == 9){
                 free(line_buff);
                 line_buff = (char*)malloc(LINE_BUFF_SIZE*sizeof(char));
                 reset_line(buffer_index);
                 buffer_index = 0;             
             }
         }
-        // int read_count = read(STDIN_FILENO, line_buff, LINE_BUFF_SIZE);
+
+
+        if (buffer_index == 0)
+            continue;
+            
         line_buff[buffer_index] = 0;
         int token_counts = 0;
-        char** line = split(line_buff, &token_counts);        
+        char** line = split(line_buff, &token_counts);    
+
         execute_line(line, token_counts);
     }    
 }
