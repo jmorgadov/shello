@@ -71,6 +71,12 @@ void execute(command_t* command){
             if (in->_fileno != 0 && in->_fileno != 1){
                 fclose(in);                
             } 
+
+
+            if (command->p_out != 1)
+                close(command->p_out);
+            if (command->p_in != 0)
+                close(command->p_in);  
             // wait(&status);
         }
         else{
@@ -100,7 +106,12 @@ void execute(command_t* command){
             }        
             if (in->_fileno){
                 fclose(in);                
-            }            
+            }      
+
+            if (command->p_out != 1)
+                close(command->p_out);
+            if (command->p_in != 0)
+                close(command->p_in);      
             exit(0);
         }
     }    

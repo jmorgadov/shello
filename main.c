@@ -6,7 +6,7 @@ Functionalities status:
 - (02) Basic -------- OK
 - (03) Basic -------- OK
 - (04) Basic -------- OK
-- (05) Basic -------- 
+- (05) Basic -------- OK
 - (06) Basic -------- OK
 - (07) Basic -------- OK
 - (08) Basic -------- OK
