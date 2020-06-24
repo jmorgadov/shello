@@ -24,8 +24,10 @@ command_t* init_command(char* name, char** args){
     command_t* comm = (command_t*)malloc(sizeof(command_t));
     comm->name = name;
     comm->args = args;
-    comm->in = 0;
-    comm->out = 1;  
+    comm->in = NULL;
+    comm->out = NULL;  
+    comm->p_in = 0;
+    comm->p_out = 1;  
     return comm;
 }
 
@@ -34,8 +36,8 @@ void resolve_pipes(command_t** commands, int len){
     {
         int p[2];
         pipe(p);
-        commands[i-1]->out = p[1];
-        commands[i]->in = p[0];
+        commands[i-1]->p_out = p[1];
+        commands[i]->p_in = p[0];
     }    
 }
 
@@ -51,11 +53,9 @@ void execute(command_t* command){
     else if (COMMAND_IS_("history")){        
         char** h_lines = get_history_lines(history);
         int max = history->count < HISTORY_MAX_SIZE ? history-> count : HISTORY_MAX_SIZE;
-        for (int i = 0; i < max; i++)
-        {
+        for (int i = 0; i < max; i++) {
             print("[%d] %s\n", i + 1, h_lines[i]);
-        }
-        
+        }        
     }
     else
     {
@@ -63,39 +63,64 @@ void execute(command_t* command){
         int status = 0;
         if (child_pid = fork()){
             waitpid(child_pid, &status, W_OK);
-            int out = command->out;
-            int in = command->out;
-            if (out != 0 && out != 1){
-                close(out);
+            FILE* out = command->out;
+            FILE* in = command->in;
+            if (out->_fileno != 0 && out->_fileno != 1){
+                fclose(out);
             }        
-            if (in != 0 && in != 1){
-                close(in);                
+            if (in->_fileno != 0 && in->_fileno != 1){
+                fclose(in);                
             } 
+
+
+            if (command->p_out != 1)
+                close(command->p_out);
+            if (command->p_in != 0)
+                close(command->p_in);  
             // wait(&status);
         }
         else{
-            setbuf(stdout, NULL);
-            dup2(command->in, 0);
-            dup2(command->out, 1);
+            int i = 0;
+            int o = 1;
+            if (command->p_in != 0)
+                i = dup2(command->p_in, 0);
+            else
+                i = dup2(command->in->_fileno, 0);
+
+            if (command->p_out != 1)
+                o = dup2(command->p_out, 1);
+            else
+                o = dup2(command->out->_fileno, 1);
+
+            if (i != 0)
+                close(i);
+            if (o != 1)
+                close(o);
+            
+            
             execvp(command->name, command->args);  
-            int out = command->out;
-            int in = command->out;
-            if (out != 0 && out != 1){
-                close(out);                
+            FILE* out = command->out;
+            FILE* in = command->in;
+            if (out->_fileno && out->_fileno != 1){
+                fclose(out);                
             }        
-            if (in != 0 && in != 1){
-                close(in);                
-            }            
+            if (in->_fileno){
+                fclose(in);                
+            }      
+
+            if (command->p_out != 1)
+                close(command->p_out);
+            if (command->p_in != 0)
+                close(command->p_in);      
             exit(0);
         }
     }    
-
     add_line(command, history);
 }
 
-char** resolve_files_in_out(char** commands, int len, int* in, int* out){
-    int infd = -1;
-    int outfd = -1;
+char** resolve_files_in_out(char** commands, int len, FILE** in, FILE** out){
+    FILE* infd = stdin;
+    FILE* outfd = stdout;
     char** answ = (char**)malloc(len*sizeof(char*));
     int answ_index = 0;
     for (int i = 0; i < len; i++)
@@ -103,8 +128,8 @@ char** resolve_files_in_out(char** commands, int len, int* in, int* out){
         if (STR_EQ(commands[i], ">")){
             char* path = commands[i + 1];
             i++;
-            int fd = creat(path, O_WRONLY);
-            if (fd == -1){
+            FILE* fd = fopen(path, "w+");
+            if (fd->_fileno < 2){
                 printc(RED, "Error creating file %s\n", path);
             }
             else{
@@ -114,8 +139,8 @@ char** resolve_files_in_out(char** commands, int len, int* in, int* out){
         else if (STR_EQ(commands[i], ">>")){
             char* path = commands[i + 1];
             i++;
-            int fd = open(path, O_WRONLY, O_APPEND);
-            if (fd == -1){
+            FILE* fd = fopen(path, "a+");
+            if (fd->_fileno < 2){
                 printc(RED, "Error opening file %s\n", path);
             }
             else{
@@ -125,8 +150,8 @@ char** resolve_files_in_out(char** commands, int len, int* in, int* out){
         else if (STR_EQ(commands[i], "<")){
             char* path = commands[i + 1];
             i++;
-            int fd = open(path, O_RDONLY);
-            if (fd == -1){
+            FILE* fd = fopen(path, "r");
+            if (fd->_fileno < 2){
                 printc(RED, "Error opening file %s\n", path);
             }
             else{
@@ -141,16 +166,16 @@ char** resolve_files_in_out(char** commands, int len, int* in, int* out){
     for (int i = 0; i < answ_index; i++)
         final_answ[i] = answ[i];
 
-    if (infd >= 0)
+    if (infd->_fileno >= 0)
         *in = infd;
-    if (outfd >= 0)
+    if (outfd->_fileno >= 0)
         *out = outfd;
     return final_answ;    
 }
 
 command_t* get_command(char** command, int len){
-    int in = 0;
-    int out = 1;
+    FILE* in = stdin;
+    FILE* out = stdout;
     char** comm = resolve_files_in_out(command, len, &in, &out);
     command_t* temp = init_command(comm[0], comm);
     temp->in = in;

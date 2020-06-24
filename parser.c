@@ -39,7 +39,6 @@ int count_line_tokens(char* str){
 }
 
 char** split(char* str, int* tokens_count){
-    print("\n\n");
     int len = strlen(str) + 1;
     temp_buff = (char*)malloc(len*sizeof(char));
     int t_count = count_line_tokens(str);
@@ -99,6 +98,5 @@ char** split(char* str, int* tokens_count){
         answ[a_idx++] = temp_buff;
     }
     *tokens_count = t_count; 
-    print("\ntokens: %d\n\n", t_count);   
     return answ;
 }
