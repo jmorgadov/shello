@@ -166,6 +166,6 @@ int main(int agrc, char **args)
         int token_counts = 0;
         char** line = split(line_buff, &token_counts);    
 
-        execute_line(line, token_counts);
+        execute_line(line, token_counts, line_buff);
     }    
 }

@@ -10,6 +10,7 @@
 #include "commands.h"
 #include "debug.h"
 #include "history.h"
+#include "parser.h"
 
 typedef int bool;
 
@@ -51,10 +52,11 @@ void execute(command_t* command){
         exit(0);
     }    
     else if (COMMAND_IS_("history")){        
-        char** h_lines = get_history_lines(history);
-        int max = history->count < HISTORY_MAX_SIZE ? history-> count : HISTORY_MAX_SIZE;
+        // char** h_lines = get_history_lines(history);
+        int max = history->count;
+        int begin = max < HISTORY_MAX_SIZE ? 0 : history->index;
         for (int i = 0; i < max; i++) {
-            print("[%d] %s\n", i + 1, h_lines[i]);
+            print("[%d] %s\n", i + 1, history->lines[(i + begin)%HISTORY_MAX_SIZE]);
         }        
     }
     else
@@ -115,7 +117,6 @@ void execute(command_t* command){
             exit(0);
         }
     }    
-    add_line(command, history);
 }
 
 char** resolve_files_in_out(char** commands, int len, FILE** in, FILE** out){
@@ -183,7 +184,7 @@ command_t* get_command(char** command, int len){
     return temp;
 }
 
-void execute_line(char** command_tokens, int tokens_count){
+void execute_line(char** command_tokens, int tokens_count, char* line){
     if (tokens_count == 0)
         return;
     char** temp_command = (char**)malloc(tokens_count*sizeof(char*));
@@ -204,11 +205,26 @@ void execute_line(char** command_tokens, int tokens_count){
             temp_command[k++] = command_tokens[i];
         }
     }
+    //check again command
+    if (STR_EQ(commands[0]->args[0], "again"))
+    {
+        int token_counts = 0;
+        char* command_line = get_at(atoi(commands[0]->args[1]) - 1, history);
+        if (command_line == NULL)
+            return;
+        char** line = split(command_line, &token_counts);
+        execute_line(line, token_counts, command_line);
+        return;
+    }
     resolve_pipes(commands, c);
     for (int i = 0; i < c; i++)
     {        
         command_t* comm = commands[i];
         execute(comm);
     }  
+    if (line[0] != ' ') {
+        print("\nadded command %s to history\n", line);
+        add_line(line, history);
+    }
     
 }

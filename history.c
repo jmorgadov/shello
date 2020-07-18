@@ -1,9 +1,11 @@
 #include "commands.h"
+#include "debug.h"
 #include "history.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -17,10 +19,13 @@ history_h* init_history_handler(){
     return hh;
 }
 
-int add_line (command_t* comand,history_h* hh){
-    hh->count++;
-    hh->lines[hh->index] = comand->args[0];
-    hh->index= (hh->index+1)%HISTORY_MAX_SIZE;
+int add_line (char* command, history_h* hh){
+    hh->count = (hh->count+1) > HISTORY_MAX_SIZE ? HISTORY_MAX_SIZE : (hh->count+1);    
+    char* copy = (char*)malloc(sizeof(char)*strlen(command));
+    copy = strcpy(copy, command);
+    hh->lines[hh->index] = copy;
+    print("\nCommand %s added\n", copy);
+    hh->index = (hh->index+1)%HISTORY_MAX_SIZE;
     return 0;
 }
 
@@ -39,6 +44,14 @@ char** get_history_lines (history_h* hh){
             lines[i] = hh->lines[(index + i)%HISTORY_MAX_SIZE];
     }
     return lines;
+}
+
+char* get_at(int index, history_h* hh){
+    if (index < 0 || index >= hh->count){
+        printc(RED, "\nIndexOutOfRangeException at command lines\n");
+        return NULL;
+    }
+    return hh->lines[index];
 }
 
 
