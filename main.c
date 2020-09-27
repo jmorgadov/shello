@@ -10,7 +10,7 @@ Functionalities status:
 - (06) Basic -------- OK
 - (07) Basic -------- OK
 - (08) Basic -------- OK
-- (09) Multi-pipe --- Implemented (Not tested)
+- (09) Multi-pipe --- OK
 - (10) Background ---
 - (11) Spaces ------- OK
 - (12) History ------ OK
