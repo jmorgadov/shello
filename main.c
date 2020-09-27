@@ -10,10 +10,10 @@ Functionalities status:
 - (06) Basic -------- OK
 - (07) Basic -------- OK
 - (08) Basic -------- OK
-- (09) Multi-pipe --- Implemented (Not tested)
+- (09) Multi-pipe --- OK
 - (10) Background ---
 - (11) Spaces ------- OK
-- (12) History ------ Semi-Implemented
+- (12) History ------ OK
 - (13) Ctrl+C -------
 - (14) Chain --------
 - (15) If -----------
@@ -39,7 +39,7 @@ Functionalities status:
 
 #define TRUE 1
 #define FALSE 0
-#define SHELL_NAME "tushell"
+#define SHELL_NAME "shello"
 #define LINE_BUFF_SIZE 500 
 #define CLEAN_BUFFER_SIZE 200
 
@@ -69,17 +69,17 @@ string readf(FILE *file, int size) {
 void printPrompt(){
     printc(BOLD_GREEN, "%s", SHELL_NAME);
     print(":");
-    printc(BOLD_BLUE, "%s", cwd);
+    printc(BOLD_CYAN, "%s", cwd);
     print("$ ");
 }
 
 void printIntro(){
-    int f = open("intro.txt", O_RDONLY);
-    char* buff = (char*)malloc(sizeof(char));
-    while (read(f,buff,1) > 0)
-        print("%d", *buff);
+    FILE* f = fopen("intro", "r");
+    char* buff = (char*)malloc(sizeof(char));    
+    while (read(f->_fileno,buff,1) > 0)
+        print("%c", *buff);
     print("\n");
-    close(f);
+    fclose(f);    
 }
 
 char getch() {
@@ -119,7 +119,7 @@ int main(int agrc, char **args)
 {
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);
-    // printIntro();
+    printIntro();
     line_buff = (char*)malloc(LINE_BUFF_SIZE * sizeof(char));
     int buffer_index = 0;
     char current = 0;
@@ -166,6 +166,6 @@ int main(int agrc, char **args)
         int token_counts = 0;
         char** line = split(line_buff, &token_counts);    
 
-        execute_line(line, token_counts);
+        execute_line(line, token_counts, line_buff);
     }    
 }

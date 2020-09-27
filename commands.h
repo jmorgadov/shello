@@ -16,5 +16,5 @@ typedef struct command{
 
 void execute(command_t* command);
 command_t* init_command(char* name, char** args);
-void execute_line(char** command_tokens, int tokens_count);
+void execute_line(char** command_tokens, int tokens_count, char* line);
 #endif

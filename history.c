@@ -1,9 +1,11 @@
 #include "commands.h"
+#include "debug.h"
 #include "history.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -13,14 +15,15 @@ history_h* init_history_handler(){
     history_h* hh =(history_h*) malloc(sizeof(history_h));
     hh->count = 0;
     hh->index = 0;
-    hh->lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char));
+    hh->lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char*));
     return hh;
 }
 
-int add_line (command_t* comand,history_h* hh){
-    hh->count++;
-    hh->lines[hh->index] = comand->args[0];
-    hh->index= (hh->index+1)%HISTORY_MAX_SIZE;
+int add_line (char* command, history_h* hh){
+    hh->count = (hh->count+1) > HISTORY_MAX_SIZE ? HISTORY_MAX_SIZE : (hh->count+1);    
+    hh->lines[hh->index] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+    strcpy(hh->lines[hh->index], command);
+    hh->index = (hh->index+1)%HISTORY_MAX_SIZE;
     return 0;
 }
 
@@ -30,15 +33,31 @@ char** get_history_lines (history_h* hh){
     char** lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char*));    
 
     if (c < HISTORY_MAX_SIZE)
+    {
         for (int i = 0; i < c; i++)
-           lines[i]=hh->lines[i]; 
+        {
+            lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+            strcpy(lines[i], hh->lines[i]); 
+        }
+    }
     else
     {
         int indx = hh->index;
         for (int i = 0; i < HISTORY_MAX_SIZE; i++)
-            lines[i] = hh->lines[(index + i)%HISTORY_MAX_SIZE];
+        {
+            lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+            strcpy(lines[i], hh->lines[(index + i)%HISTORY_MAX_SIZE]);
+        }
     }
     return lines;
+}
+
+char* get_at(int index, history_h* hh){
+    if (index < 0 || index >= hh->count){
+        printc(RED, "\nIndexOutOfRangeException at command lines\n");
+        return NULL;
+    }
+    return hh->lines[index];
 }
 
 
