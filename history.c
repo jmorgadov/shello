@@ -15,16 +15,14 @@ history_h* init_history_handler(){
     history_h* hh =(history_h*) malloc(sizeof(history_h));
     hh->count = 0;
     hh->index = 0;
-    hh->lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char));
+    hh->lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char*));
     return hh;
 }
 
 int add_line (char* command, history_h* hh){
     hh->count = (hh->count+1) > HISTORY_MAX_SIZE ? HISTORY_MAX_SIZE : (hh->count+1);    
-    char* copy = (char*)malloc(sizeof(char)*strlen(command));
-    copy = strcpy(copy, command);
-    hh->lines[hh->index] = copy;
-    print("\nCommand %s added\n", copy);
+    hh->lines[hh->index] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+    strcpy(hh->lines[hh->index], command);
     hh->index = (hh->index+1)%HISTORY_MAX_SIZE;
     return 0;
 }
@@ -35,13 +33,21 @@ char** get_history_lines (history_h* hh){
     char** lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char*));    
 
     if (c < HISTORY_MAX_SIZE)
+    {
         for (int i = 0; i < c; i++)
-           lines[i]=hh->lines[i]; 
+        {
+            lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+            strcpy(lines[i], hh->lines[i]); 
+        }
+    }
     else
     {
         int indx = hh->index;
         for (int i = 0; i < HISTORY_MAX_SIZE; i++)
-            lines[i] = hh->lines[(index + i)%HISTORY_MAX_SIZE];
+        {
+            lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+            strcpy(lines[i], hh->lines[(index + i)%HISTORY_MAX_SIZE]);
+        }
     }
     return lines;
 }

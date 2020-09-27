@@ -51,7 +51,7 @@ void execute(command_t* command){
     else if (COMMAND_IS_("exit")){
         exit(0);
     }    
-    else if (COMMAND_IS_("history")){        
+    else if (COMMAND_IS_("history")){
         // char** h_lines = get_history_lines(history);
         int max = history->count;
         int begin = max < HISTORY_MAX_SIZE ? 0 : history->index;
@@ -223,7 +223,6 @@ void execute_line(char** command_tokens, int tokens_count, char* line){
         execute(comm);
     }  
     if (line[0] != ' ') {
-        print("\nadded command %s to history\n", line);
         add_line(line, history);
     }
     

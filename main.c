@@ -13,7 +13,7 @@ Functionalities status:
 - (09) Multi-pipe --- Implemented (Not tested)
 - (10) Background ---
 - (11) Spaces ------- OK
-- (12) History ------ Semi-Implemented
+- (12) History ------ OK
 - (13) Ctrl+C -------
 - (14) Chain --------
 - (15) If -----------
