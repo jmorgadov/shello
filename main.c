@@ -74,12 +74,12 @@ void printPrompt(){
 }
 
 void printIntro(){
-    int f = open("intro.txt", O_RDONLY);
-    char* buff = (char*)malloc(sizeof(char));
-    while (read(f,buff,1) > 0)
-        print("%d", *buff);
+    FILE* f = fopen("intro", "r");
+    char* buff = (char*)malloc(sizeof(char));    
+    while (read(f->_fileno,buff,1) > 0)
+        print("%c", *buff);
     print("\n");
-    close(f);
+    fclose(f);    
 }
 
 char getch() {
@@ -119,7 +119,7 @@ int main(int agrc, char **args)
 {
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);
-    // printIntro();
+    printIntro();
     line_buff = (char*)malloc(LINE_BUFF_SIZE * sizeof(char));
     int buffer_index = 0;
     char current = 0;
