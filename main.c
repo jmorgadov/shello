@@ -13,7 +13,7 @@ Functionalities status:
 - (09) Multi-pipe --- Implemented (Not tested)
 - (10) Background ---
 - (11) Spaces ------- OK
-- (12) History ------ Semi-Implemented
+- (12) History ------ OK
 - (13) Ctrl+C -------
 - (14) Chain --------
 - (15) If -----------
@@ -166,6 +166,6 @@ int main(int agrc, char **args)
         int token_counts = 0;
         char** line = split(line_buff, &token_counts);    
 
-        execute_line(line, token_counts);
+        execute_line(line, token_counts, line_buff);
     }    
 }
