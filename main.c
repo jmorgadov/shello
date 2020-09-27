@@ -39,7 +39,7 @@ Functionalities status:
 
 #define TRUE 1
 #define FALSE 0
-#define SHELL_NAME "tushell"
+#define SHELL_NAME "shello"
 #define LINE_BUFF_SIZE 500 
 #define CLEAN_BUFFER_SIZE 200
 
