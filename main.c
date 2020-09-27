@@ -69,7 +69,7 @@ string readf(FILE *file, int size) {
 void printPrompt(){
     printc(BOLD_GREEN, "%s", SHELL_NAME);
     print(":");
-    printc(BOLD_BLUE, "%s", cwd);
+    printc(BOLD_CYAN, "%s", cwd);
     print("$ ");
 }
 
