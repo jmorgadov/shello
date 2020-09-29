@@ -302,12 +302,6 @@ char** parse_line(char* line, int* steps_count){
     parse_tokens[0] = ";";
     char** commands = splitby(line, steps_count, parse_tokens, 1);
     return commands;
-    // for (int i = 0; i < line_token_counts; i++)
-    // {
-    //     int comm_token_counts = 0;
-    //     char** comm = split(line[i], &comm_token_counts);
-    //     execute_command_line(line, comm_token_counts, line);                        
-    // }
 }
 
 void process_line(char* line){
