@@ -189,6 +189,8 @@ void execute_line(char** command_tokens, int tokens_count, char* line){
         return;
     char** temp_command = (char**)malloc(tokens_count*sizeof(char*));
     command_t** commands = (command_t**)malloc(MAX_COMMAND_IN_LINE*sizeof(command_t*));
+
+    // Dividing commands by pipes
     int k = 0;
     int c = 0;
     for (int i = 0; i <= tokens_count; i++){
@@ -205,6 +207,7 @@ void execute_line(char** command_tokens, int tokens_count, char* line){
             temp_command[k++] = command_tokens[i];
         }
     }
+
     //check again command
     if (STR_EQ(commands[0]->args[0], "again"))
     {
@@ -216,7 +219,9 @@ void execute_line(char** command_tokens, int tokens_count, char* line){
         execute_line(line, token_counts, command_line);
         return;
     }
+
     resolve_pipes(commands, c);
+
     for (int i = 0; i < c; i++)
     {        
         command_t* comm = commands[i];

@@ -163,9 +163,14 @@ int main(int agrc, char **args)
             continue;
             
         line_buff[buffer_index] = 0;
-        int token_counts = 0;
-        char** line = split(line_buff, &token_counts);    
+        int line_token_counts = 0;
 
-        execute_line(line, token_counts, line_buff);
+        char** line = splitby(line_buff, &line_token_counts, ';');
+        for (int i = 0; i < line_token_counts; i++)
+        {
+            int comm_token_counts = 0;
+            char** comm = split(line[i], &comm_token_counts);
+            execute_line(line, comm_token_counts, line_buff);                        
+        }
     }    
 }

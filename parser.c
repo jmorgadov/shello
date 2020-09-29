@@ -38,7 +38,7 @@ int count_line_tokens(char* str){
     return count + 1;    
 }
 
-char** split(char* str, int* tokens_count){
+char** splitby(char* str, int* tokens_count, char splitChar){
     int len = strlen(str) + 1;
     temp_buff = (char*)malloc(len*sizeof(char));
     int t_count = count_line_tokens(str);
@@ -72,7 +72,7 @@ char** split(char* str, int* tokens_count){
             
             temp_buff[tb_idx++] = current;
         }
-        else if(current == ' ')
+        else if(current == splitChar)
         {
             if (on_string)
                 temp_buff[tb_idx++] = current;            
@@ -99,4 +99,8 @@ char** split(char* str, int* tokens_count){
     }
     *tokens_count = t_count; 
     return answ;
+}
+
+char** split(char* str, int* tokens_count){
+    return splitby(str, tokens_count, ' ');
 }
