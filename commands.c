@@ -10,7 +10,9 @@
 #include "commands.h"
 #include "debug.h"
 #include "history.h"
-#include "parser.h"
+#include "strtools.h"
+#include "string.h"
+#include "datastructs.h"
 
 typedef int bool;
 
@@ -42,9 +44,7 @@ void resolve_pipes(command_t** commands, int len){
     }    
 }
 
-void execute(command_t* command){   
-    if (history == NULL)
-        history = init_history_handler();
+int execute(command_t* command){   
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
     }
@@ -58,6 +58,12 @@ void execute(command_t* command){
         for (int i = 0; i < max; i++) {
             print("[%d] %s\n", i + 1, history->lines[(i + begin)%HISTORY_MAX_SIZE]);
         }        
+    }
+    else if (COMMAND_IS_("true")){
+        return 1;
+    }
+    else if (COMMAND_IS_("false")){
+        return 0;
     }
     else
     {
@@ -79,7 +85,7 @@ void execute(command_t* command){
                 close(command->p_out);
             if (command->p_in != 0)
                 close(command->p_in);  
-            // wait(&status);
+            return status == 0;
         }
         else{
             int i = 0;
@@ -184,11 +190,13 @@ command_t* get_command(char** command, int len){
     return temp;
 }
 
-void execute_line(char** command_tokens, int tokens_count, char* line){
+int execute_command_line(char** command_tokens, int tokens_count, char* line){
     if (tokens_count == 0)
-        return;
+        return 1;
     char** temp_command = (char**)malloc(tokens_count*sizeof(char*));
     command_t** commands = (command_t**)malloc(MAX_COMMAND_IN_LINE*sizeof(command_t*));
+
+    // Dividing commands by pipes
     int k = 0;
     int c = 0;
     for (int i = 0; i <= tokens_count; i++){
@@ -205,25 +213,115 @@ void execute_line(char** command_tokens, int tokens_count, char* line){
             temp_command[k++] = command_tokens[i];
         }
     }
+
     //check again command
     if (STR_EQ(commands[0]->args[0], "again"))
     {
         int token_counts = 0;
         char* command_line = get_at(atoi(commands[0]->args[1]) - 1, history);
         if (command_line == NULL)
-            return;
-        char** line = split(command_line, &token_counts);
-        execute_line(line, token_counts, command_line);
-        return;
+            return 1;
+        process_line(command_line);
+        return 1;
     }
+
     resolve_pipes(commands, c);
+    int return_val = 0;
     for (int i = 0; i < c; i++)
     {        
         command_t* comm = commands[i];
-        execute(comm);
+        return_val = execute(comm);
     }  
-    if (line[0] != ' ') {
-        add_line(line, history);
+    return return_val;
+}
+
+int parse_and_execute(char* line){
+    int cmd_token_counts = 0;
+    char** cmd_tokens = split(line, &cmd_token_counts);
+    return execute_command_line(cmd_tokens, cmd_token_counts, line);
+}
+
+void execute_command_stack(my_stack_t* command_stack, my_stack_t* ops)
+{
+    for (int i = 0; i < ops->items->count; i++)
+    {
+        char* current_op = (char*)pop(ops);    
+        if (current_op != NULL){
+            if (STR_EQ(current_op, "&&")){
+                char* line = (char*)pop(command_stack);
+                int return_val = parse_and_execute(line);
+                if (return_val == 1)
+                    continue;
+                else
+                    return;
+            }
+            else if (STR_EQ(current_op, "||")){
+                char* line = (char*)pop(command_stack);
+                int return_val = parse_and_execute(line);
+                if (return_val == 0)
+                    continue;
+                else
+                    return;
+            }
+        }        
+    }
+    if (command_stack->items->count > 0){
+        char* line = (char*)pop(command_stack);
+        int return_val = parse_and_execute(line);
     }
     
+}
+
+my_stack_t* generate_command_stack(char* command_line, my_stack_t* ops){
+    my_stack_t* s = stackinit();
+    my_stack_t* temp = stackinit();
+    int token_counts = 0;
+    char* split_tokens[2];
+    split_tokens[0] = "&&";
+    split_tokens[1] = "||";
+    char** command_tokens = splitbyr(command_line, &token_counts, split_tokens, 2, 0);
+
+    for (int i = token_counts - 1; i >= 0; i--)
+    {
+        char* token = command_tokens[i];
+        if (STR_EQ(token, "&&") || STR_EQ(token, "||")){
+            push(ops, (char*)token);
+        }
+        else{
+            push(s, (char*)token);
+        }
+    }
+    for (int i = 0; i < temp->items->count; i++){
+        push(s, (char*)pop(temp));
+    }
+    return s;
+}
+
+char** parse_line(char* line, int* steps_count){
+    char* parse_tokens[1];
+    parse_tokens[0] = ";";
+    char** commands = splitby(line, steps_count, parse_tokens, 1);
+    return commands;
+    // for (int i = 0; i < line_token_counts; i++)
+    // {
+    //     int comm_token_counts = 0;
+    //     char** comm = split(line[i], &comm_token_counts);
+    //     execute_command_line(line, comm_token_counts, line);                        
+    // }
+}
+
+void process_line(char* line){
+    if (history == NULL)
+        history = init_history_handler();
+    // Separate execution steps by semicolon (;)
+    int steps_count = 0;
+    char** command_lines = parse_line(line, &steps_count);
+
+    // Generate the stack and run the command of each command line 
+    for (int i = 0; i < steps_count; i++){
+        my_stack_t* ops = stackinit();
+        my_stack_t* current_command_stack = generate_command_stack(command_lines[i], ops);
+        execute_command_stack(current_command_stack, ops);
+    }    
+    add_line(line, history);
 }
