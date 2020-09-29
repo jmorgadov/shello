@@ -26,7 +26,6 @@ Functionalities status:
 
 #include "commands.h"
 #include "debug.h"
-#include "strtools.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +35,7 @@ Functionalities status:
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <string.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -163,14 +163,6 @@ int main(int agrc, char **args)
             continue;
             
         line_buff[buffer_index] = 0;
-        int line_token_counts = 0;
-
-        char** line = splitby(line_buff, &line_token_counts, ';');
-        for (int i = 0; i < line_token_counts; i++)
-        {
-            int comm_token_counts = 0;
-            char** comm = split(line[i], &comm_token_counts);
-            execute_line(line, comm_token_counts, line_buff);                        
-        }
+        process_line(line_buff);        
     }    
 }

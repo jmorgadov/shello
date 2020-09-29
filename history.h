@@ -1,7 +1,5 @@
 #ifndef HISTORY_HANDLER
 #define HISTORY_HANDLER
-#include "commands.h"
-
 
 #define HISTORY_MAX_SIZE 10
 
