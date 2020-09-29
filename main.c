@@ -26,7 +26,7 @@ Functionalities status:
 
 #include "commands.h"
 #include "debug.h"
-#include "parser.h"
+#include "strtools.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -150,7 +150,7 @@ int main(int agrc, char **args)
                     print("%c", current);
                     break;
             }
-            if (ends_with(line_buff, UP_ARROW_KEY)|| current == 9){
+            if (ends_with(line_buff, UP_ARROW_KEY) || current == 9){
                 free(line_buff);
                 line_buff = (char*)malloc(LINE_BUFF_SIZE*sizeof(char));
                 reset_line(buffer_index);

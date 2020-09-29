@@ -12,6 +12,7 @@ typedef struct command{
     FILE* out;
     int p_out;
     int p_in;
+    int return_val;    
 }command_t;
 
 void execute(command_t* command);

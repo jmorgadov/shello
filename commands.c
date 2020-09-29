@@ -10,7 +10,7 @@
 #include "commands.h"
 #include "debug.h"
 #include "history.h"
-#include "parser.h"
+#include "strtools.h"
 
 typedef int bool;
 
@@ -229,6 +229,9 @@ void execute_line(char** command_tokens, int tokens_count, char* line){
     }  
     if (line[0] != ' ') {
         add_line(line, history);
-    }
+    }    
+}
+
+void parse_line(){
     
 }
