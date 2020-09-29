@@ -15,7 +15,7 @@ Functionalities status:
 - (11) Spaces ------- OK
 - (12) History ------ OK
 - (13) Ctrl+C -------
-- (14) Chain --------
+- (14) Chain -------- OK
 - (15) If -----------
 - (16) Multi-If -----
 - (17) Help --------- Implemented (Not tested)
