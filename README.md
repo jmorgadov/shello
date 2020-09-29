@@ -4,7 +4,7 @@ Shello is a shell implementation oriented as a school project of OS (Operating S
 
 ## How to compile
 
-To compile shello you only need to excecute `make` inside the project. This will also run shello.
+To compile shello you only need to excecute `make` inside the project
 
 ## How to run it
 
