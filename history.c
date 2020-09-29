@@ -1,4 +1,3 @@
-#include "commands.h"
 #include "debug.h"
 #include "history.h"
 #include <unistd.h>

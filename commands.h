@@ -12,9 +12,9 @@ typedef struct command{
     FILE* out;
     int p_out;
     int p_in;
+    int return_val;    
 }command_t;
 
-void execute(command_t* command);
 command_t* init_command(char* name, char** args);
-void execute_line(char** command_tokens, int tokens_count, char* line);
+void process_line(char* line);
 #endif

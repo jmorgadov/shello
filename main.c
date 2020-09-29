@@ -15,7 +15,7 @@ Functionalities status:
 - (11) Spaces ------- OK
 - (12) History ------ OK
 - (13) Ctrl+C -------
-- (14) Chain --------
+- (14) Chain -------- OK
 - (15) If -----------
 - (16) Multi-If -----
 - (17) Help --------- Implemented (Not tested)
@@ -26,7 +26,6 @@ Functionalities status:
 
 #include "commands.h"
 #include "debug.h"
-#include "parser.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +35,7 @@ Functionalities status:
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <string.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -150,7 +150,7 @@ int main(int agrc, char **args)
                     print("%c", current);
                     break;
             }
-            if (ends_with(line_buff, UP_ARROW_KEY)|| current == 9){
+            if (ends_with(line_buff, UP_ARROW_KEY) || current == 9){
                 free(line_buff);
                 line_buff = (char*)malloc(LINE_BUFF_SIZE*sizeof(char));
                 reset_line(buffer_index);
@@ -163,9 +163,6 @@ int main(int agrc, char **args)
             continue;
             
         line_buff[buffer_index] = 0;
-        int token_counts = 0;
-        char** line = split(line_buff, &token_counts);    
-
-        execute_line(line, token_counts, line_buff);
+        process_line(line_buff);        
     }    
 }
