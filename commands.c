@@ -13,6 +13,7 @@
 #include "strtools.h"
 #include "string.h"
 #include "datastructs.h"
+#include "help.h"
 
 typedef int bool;
 
@@ -64,6 +65,10 @@ int execute(command_t* command){
     }
     else if (COMMAND_IS_("false")){
         return 0;
+    }
+    else if (COMMAND_IS_("help")){
+        show_command_help(command->args[1]);
+        return 1;
     }
     else
     {
