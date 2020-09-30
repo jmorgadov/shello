@@ -1,0 +1,12 @@
+Team: Jorge Morgado Vega, Andres A. Leon Almaguer
+
+To see a specific command help type:
+help [COMMAND]
+
+Commands:
+    - history
+    - true
+    - false
+    - exit
+
+Eg. help history
