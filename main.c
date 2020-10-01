@@ -18,7 +18,7 @@ Functionalities status:
 - (14) Chain -------- OK
 - (15) If -----------
 - (16) Multi-If -----
-- (17) Help --------- Implemented (Not tested)
+- (17) Help --------- OK
 - (18) Variables ----
 */
 
