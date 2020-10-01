@@ -1,0 +1,5 @@
+again [NUMBER]
+
+    Runs a command from history specified by its number.
+
+    Eg. again 3
