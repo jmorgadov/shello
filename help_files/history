@@ -1,0 +1,5 @@
+history
+
+    Return the las 10 commands used enumerated from 1 to 10. 
+
+    To run one of the commands in history look for command `again` help.
