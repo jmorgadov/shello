@@ -8,5 +8,6 @@ Commands:
     - true
     - false
     - exit
+    - again
 
 Eg. help history
