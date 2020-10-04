@@ -48,17 +48,20 @@ void resolve_pipes(command_t** commands, int len){
 int execute(command_t* command){   
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
+        return 1;
     }
     else if (COMMAND_IS_("exit")){
         exit(0);
     }    
     else if (COMMAND_IS_("history")){
+        print_history_lines(history);
+        return 1;
         // char** h_lines = get_history_lines(history);
-        int max = history->count;
-        int begin = max < HISTORY_MAX_SIZE ? 0 : history->index;
-        for (int i = 0; i < max; i++) {
-            print("[%d] %s\n", i + 1, history->lines[(i + begin)%HISTORY_MAX_SIZE]);
-        }        
+        // int max = history->count;
+        // int begin = max < HISTORY_MAX_SIZE ? 0 : history->index;
+        // for (int i = 0; i < max; i++) {
+        //     print("[%d] %s\n", i + 1, history->lines[(i + begin)%HISTORY_MAX_SIZE]);
+        // }        
     }
     else if (COMMAND_IS_("true")){
         return 1;
@@ -309,12 +312,54 @@ char** parse_line(char* line, int* steps_count){
     return commands;
 }
 
+int is_digit(char c){
+    return c >= '0' && c <= '9';
+}
+
+char* repace_again_commands(char* line)
+{
+    int len = strlen(line);
+    char* newLine = (char*)malloc(sizeof(char)*500);
+    char* number = (char*)malloc(sizeof(char)*10);
+    int pos = 0;
+    for (int i = 0; i < len; i++)
+    {
+        if (starts_with(line + i, "again")){
+            int temp = i;
+            temp += 5;
+            while (line[temp] == ' ')
+                temp++;
+            int np = 0;
+            while (is_digit(line[temp])){
+                number[np++] = line[temp++];
+            }
+            number[np] = 0;
+            char* hist_line = get_at(atoi(number) - 1, history);
+            int hp = 0;
+            while (hist_line[hp] != '\n' && hist_line[hp] != 0){
+                newLine[pos++] = hist_line[hp++];
+            }
+            newLine[pos++] = ' ';
+            i = temp;
+        }
+        else{
+            newLine[pos++] = line[i];
+        }
+    }
+    newLine[pos] = 0;
+    return newLine;
+    
+}
+
 void process_line(char* line){
     if (history == NULL)
         history = init_history_handler();
+
+    char* newline = repace_again_commands(line);
+
     // Separate execution steps by semicolon (;)
     int steps_count = 0;
-    char** command_lines = parse_line(line, &steps_count);
+    char** command_lines = parse_line(newline, &steps_count);
 
     // Generate the stack and run the command of each command line 
     for (int i = 0; i < steps_count; i++){
@@ -322,5 +367,5 @@ void process_line(char* line){
         my_stack_t* current_command_stack = generate_command_stack(command_lines[i], ops);
         execute_command_stack(current_command_stack, ops);
     }    
-    add_line(line, history);
+    add_line(newline, history);
 }
