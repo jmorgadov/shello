@@ -11,6 +11,7 @@ char *temp_buff;
 
 typedef int bool;
 
+
 int starts_with_any(char* str, char** values, int values_count){
     for (int i = 0; i < values_count; i++)
     {
@@ -27,6 +28,14 @@ int starts_with_any(char* str, char** values, int values_count){
         if (match) return i;
     }
     return -1;
+}
+
+int starts_with(char* str, char* comp)
+{    
+    char* split_tokens[1];
+    split_tokens[0] = (char*)malloc(sizeof(char)*(strlen(comp) + 1));
+    strcpy(split_tokens[0], comp);
+    return starts_with_any(str, split_tokens, 1) != -1;
 }
 
 char** splitbyr(char* str, int* tokens_count, char** splitItems, int splitItemsCount, int removeSplitItems){

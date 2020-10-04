@@ -10,6 +10,22 @@
 #define FALSE 0
 #define LINE_BUFF_SIZE 500 
 
+char* readf(FILE *file, int *__lines_count) { 
+    int size = 1000;
+    int lines = 1;
+    char* text = (char*)malloc(sizeof(char)*size);
+    int i = 0;
+    while (i < size) {   
+        char b = fgetc(file);
+        text[i++] = b == EOF ? 0 : b;
+        lines += b == 10 ? 1 : 0;
+    }
+    if (text[i - 1] == 10)
+        lines--;
+    *__lines_count = lines;
+    return text;
+}
+
 history_h* init_history_handler(){
     history_h* hh =(history_h*) malloc(sizeof(history_h));
     hh->count = 0;
@@ -23,32 +39,60 @@ int add_line (char* command, history_h* hh){
     hh->lines[hh->index] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
     strcpy(hh->lines[hh->index], command);
     hh->index = (hh->index+1)%HISTORY_MAX_SIZE;
+    FILE* hist1 = fopen("history", "rw");
+    int linesCount = 0;
+    char* text = readf(hist1, &linesCount);
+    fclose(hist1);
+    remove("./history");
+    FILE* hist = fopen("history", "w");
+    char* line;
+    for (int i = 0; i < linesCount - 1; i++) {   
+        line = strtok(i == 0 ? text : NULL, "\n");
+        if (i == 0 && hh->count == HISTORY_MAX_SIZE) continue;     
+        fwrite(line, sizeof(char), strlen(line), hist);
+        fwrite("\n", sizeof(char), 1, hist);
+    }
+    int current_pos = hh->index - 1;
+    if (current_pos < 0)
+        current_pos = hh->count - 1;
+    fwrite(hh->lines[current_pos], sizeof(char), strlen(hh->lines[current_pos]), hist);
+    fwrite("\n", sizeof(char), 1, hist);    
+    fclose(hist);
     return 0;
 }
 
-char** get_history_lines (history_h* hh){
-    int c = hh->count;
-    int index = hh->index;
-    char** lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char*));    
+void print_history_lines(history_h* hh){
+    FILE* hist = fopen("history", "rw");
+    int linesCount = 0;
+    char* text = readf(hist, &linesCount);
+    char* line;
+    for (int i = 0; i < linesCount - 1; i++) {        
+        line = strtok(i == 0 ? text : NULL, "\n");
+        printf("[%d] %s\n", i + 1, line);
+    }
+    fclose(hist);
+    // int c = hh->count;
+    // int index = hh->index;
+    // char** lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char*));    
 
-    if (c < HISTORY_MAX_SIZE)
-    {
-        for (int i = 0; i < c; i++)
-        {
-            lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
-            strcpy(lines[i], hh->lines[i]); 
-        }
-    }
-    else
-    {
-        int indx = hh->index;
-        for (int i = 0; i < HISTORY_MAX_SIZE; i++)
-        {
-            lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
-            strcpy(lines[i], hh->lines[(index + i)%HISTORY_MAX_SIZE]);
-        }
-    }
-    return lines;
+    // if (c < HISTORY_MAX_SIZE)
+    // {
+    //     for (int i = 0; i < c; i++)
+    //     {
+    //         lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+    //         strcpy(lines[i], hh->lines[i]); 
+    //     }
+    // }
+    // else
+    // {
+    //     int indx = hh->index;
+    //     for (int i = 0; i < HISTORY_MAX_SIZE; i++)
+    //     {
+    //         lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+    //         strcpy(lines[i], hh->lines[(index + i)%HISTORY_MAX_SIZE]);
+    //     }
+    // }
+    // return lines;
 }
 
 char* get_at(int index, history_h* hh){
