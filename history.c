@@ -28,9 +28,24 @@ char* readf(FILE *file, int *__lines_count) {
 
 history_h* init_history_handler(){
     history_h* hh =(history_h*) malloc(sizeof(history_h));
-    hh->count = 0;
-    hh->index = 0;
+
+    FILE* hist1 = fopen("history", "rw");
+    int linesCount = 0;
+    char* text = readf(hist1, &linesCount);
+    fclose(hist1);
+
+    hh->count = linesCount > 0 ? linesCount - 1 : linesCount;
+    hh->index = hh->count == HISTORY_MAX_SIZE ? 0 : hh->count;
     hh->lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char*));
+
+    char* line;
+    for (int i = 0; i < hh->count; i++)
+    {
+        line = strtok(i == 0 ? text : NULL, "\n");
+        hh->lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+        strcpy(hh->lines[i], line);
+    }
+    
     return hh;
 }
 
@@ -39,11 +54,13 @@ int add_line (char* command, history_h* hh){
     hh->lines[hh->index] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
     strcpy(hh->lines[hh->index], command);
     hh->index = (hh->index+1)%HISTORY_MAX_SIZE;
-    FILE* hist1 = fopen("history", "rw");
+
+    FILE* hist1 = fopen("history", "r");
     int linesCount = 0;
     char* text = readf(hist1, &linesCount);
     fclose(hist1);
     remove("./history");
+
     FILE* hist = fopen("history", "w");
     char* line;
     for (int i = 0; i < linesCount - 1; i++) {   
@@ -62,7 +79,7 @@ int add_line (char* command, history_h* hh){
 }
 
 void print_history_lines(history_h* hh){
-    FILE* hist = fopen("history", "rw");
+    FILE* hist = fopen("history", "r");
     int linesCount = 0;
     char* text = readf(hist, &linesCount);
     char* line;
@@ -71,28 +88,6 @@ void print_history_lines(history_h* hh){
         printf("[%d] %s\n", i + 1, line);
     }
     fclose(hist);
-    // int c = hh->count;
-    // int index = hh->index;
-    // char** lines = (char**)malloc(HISTORY_MAX_SIZE*sizeof(char*));    
-
-    // if (c < HISTORY_MAX_SIZE)
-    // {
-    //     for (int i = 0; i < c; i++)
-    //     {
-    //         lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
-    //         strcpy(lines[i], hh->lines[i]); 
-    //     }
-    // }
-    // else
-    // {
-    //     int indx = hh->index;
-    //     for (int i = 0; i < HISTORY_MAX_SIZE; i++)
-    //     {
-    //         lines[i] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
-    //         strcpy(lines[i], hh->lines[(index + i)%HISTORY_MAX_SIZE]);
-    //     }
-    // }
-    // return lines;
 }
 
 char* get_at(int index, history_h* hh){
