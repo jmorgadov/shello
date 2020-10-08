@@ -1,3 +1,2 @@
 compile:
-	gcc -o shell.out main.c commands.c history.c strtools.c datastructs.c help.c debug.c  -g 
-
+	gcc main.c datastructs.c help.c strtools.c commands.c history.c debug.c -g -o shell.out

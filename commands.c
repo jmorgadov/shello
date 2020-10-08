@@ -11,7 +11,6 @@
 #include "debug.h"
 #include "history.h"
 #include "strtools.h"
-#include "string.h"
 #include "datastructs.h"
 #include "help.h"
 
@@ -22,7 +21,7 @@ typedef int bool;
 
 #define MAX_COMMAND_IN_LINE 10
 
-history_h* history;
+history_h* history = NULL;
 
 command_t* init_command(char* name, char** args){
     command_t* comm = (command_t*)malloc(sizeof(command_t));
@@ -316,7 +315,7 @@ int is_digit(char c){
     return c >= '0' && c <= '9';
 }
 
-char* repace_again_commands(char* line)
+char* replace_again_commands(char* line)
 {
     int len = strlen(line);
     char* newLine = (char*)malloc(sizeof(char)*500);
@@ -336,7 +335,7 @@ char* repace_again_commands(char* line)
             number[np] = 0;
             char* hist_line = get_at(atoi(number) - 1, history);
             int hp = 0;
-            while (hist_line[hp] != '\n' && hist_line[hp] != 0){
+            while (hist_line[hp] && hist_line[hp] != '\n'){
                 newLine[pos++] = hist_line[hp++];
             }
             newLine[pos++] = ' ';
@@ -355,7 +354,7 @@ void process_line(char* line){
     if (history == NULL)
         history = init_history_handler();
 
-    char* newline = repace_again_commands(line);
+    char* newline = replace_again_commands(line);
 
     // Separate execution steps by semicolon (;)
     int steps_count = 0;
