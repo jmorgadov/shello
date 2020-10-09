@@ -55,12 +55,6 @@ int execute(command_t* command){
     else if (COMMAND_IS_("history")){
         print_history_lines(history);
         return 1;
-        // char** h_lines = get_history_lines(history);
-        // int max = history->count;
-        // int begin = max < HISTORY_MAX_SIZE ? 0 : history->index;
-        // for (int i = 0; i < max; i++) {
-        //     print("[%d] %s\n", i + 1, history->lines[(i + begin)%HISTORY_MAX_SIZE]);
-        // }        
     }
     else if (COMMAND_IS_("true")){
         return 1;
@@ -356,6 +350,7 @@ void process_line(char* line){
 
     char* newline = replace_again_commands(line);
 
+    add_line(newline, history);
     // Separate execution steps by semicolon (;)
     int steps_count = 0;
     char** command_lines = parse_line(newline, &steps_count);
@@ -366,5 +361,4 @@ void process_line(char* line){
         my_stack_t* current_command_stack = generate_command_stack(command_lines[i], ops);
         execute_command_stack(current_command_stack, ops);
     }    
-    add_line(newline, history);
 }
