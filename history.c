@@ -28,7 +28,7 @@ char* readf(FILE *file, int *__lines_count) {
 
 history_h* init_history_handler(){
     history_h* hh =(history_h*) malloc(sizeof(history_h));
-
+    
     FILE* hist1 = fopen("history", "rw");
     int linesCount = 0;
     char* text = readf(hist1, &linesCount);
@@ -95,7 +95,7 @@ char* get_at(int index, history_h* hh){
         printc(RED, "\nIndexOutOfRangeException at command lines\n");
         return NULL;
     }
-    return hh->lines[index];
+    return hh->lines[(hh->index + index) % HISTORY_MAX_SIZE];
 }
 
 
