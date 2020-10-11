@@ -55,17 +55,6 @@ typedef char* string;
 char cwd[500];
 char* line_buff;
 
-// string readf(FILE *file, int size) { 
-
-//     string text = (char*)malloc(size*sizeof(char));
-//     int i = 0;
-//     while (i < size) {   
-//         char b = fgetc(file);
-//         text[i++] = b == EOF ? 0 : b;
-//     }
-//     return text;
-// }
-
 void printPrompt(){
     printc(BOLD_GREEN, "%s", SHELL_NAME);
     print(":");
