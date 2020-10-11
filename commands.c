@@ -108,7 +108,10 @@ int execute(command_t* command){
                 close(o);
             
             
-            execvp(command->name, command->args);  
+            int return_val = execvp(command->name, command->args);  
+
+            
+
             FILE* out = command->out;
             FILE* in = command->in;
             if (out->_fileno && out->_fileno != 1){
@@ -122,6 +125,11 @@ int execute(command_t* command){
                 close(command->p_out);
             if (command->p_in != 0)
                 close(command->p_in);      
+            
+            if (return_val == -1){
+                printc(RED, "Error executing command '%s'\n", command->name);
+                exit(1);
+            }
             exit(0);
         }
     }    
