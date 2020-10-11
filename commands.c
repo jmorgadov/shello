@@ -167,12 +167,19 @@ char** resolve_files_in_out(char** commands, int len, FILE** in, FILE** out){
             }
         }
         else{
-            answ[answ_index++] = commands[i];
+            answ[answ_index++] = (char*)malloc(sizeof(char)*strlen(commands[i]));
+            strcpy(answ[answ_index - 1], commands[i]);
         }
     }    
-    char** final_answ = (char**)malloc(answ_index*sizeof(char*));
-    for (int i = 0; i < answ_index; i++)
-        final_answ[i] = answ[i];
+    char** final_answ = (char**)malloc((answ_index + 1)*sizeof(char*));
+    for (int i = 0; i <= answ_index; i++){
+        if (i == answ_index){
+            final_answ[i] = NULL;
+            break;
+        }
+        final_answ[i] = (char*)malloc(sizeof(char)*strlen(answ[i]));
+        strcpy(final_answ[i], answ[i]);
+    }
 
     if (infd->_fileno >= 0)
         *in = infd;

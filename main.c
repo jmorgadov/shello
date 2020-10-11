@@ -104,7 +104,7 @@ void reset_line(int len){
         print("\b \b");  
 }
 
-int main(int agrc, char **args)
+int main(int argc, char **args)
 {
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);

@@ -9,7 +9,7 @@ void main(int argc, char **args){
     FILE* f = (FILE*)malloc(sizeof(FILE));
     char* buff = (char*)malloc(sizeof(char));
 
-    if (argc <= 1){        
+    if (argc <= 1){
         f = fopen("./build-in/help/help_files/intro", "r");
     }
     else if (STR_EQ(args[1], "true")){
@@ -25,7 +25,7 @@ void main(int argc, char **args){
         f = fopen("./build-in/help/help_files/again", "r");
     }
     else{
-        printf("%s it's not a shello command\n\n", args[1]);
+        printf("'%s' it's not a shello command\n\n", args[1]);
         free(f);
         return;
     }
