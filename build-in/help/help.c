@@ -5,7 +5,7 @@
 
 #define STR_EQ(s1,s2) strcmp(s1,s2) == 0
 
-void main(int argc, char **args){
+int main(int argc, char **args){
     FILE* f = (FILE*)malloc(sizeof(FILE));
     char* buff = (char*)malloc(sizeof(char));
 
@@ -27,7 +27,7 @@ void main(int argc, char **args){
     else{
         printf("'%s' it's not a shello command\n\n", args[1]);
         free(f);
-        return;
+        return 0;
     }
 
     while (read(f->_fileno,buff,1) > 0){
@@ -36,4 +36,5 @@ void main(int argc, char **args){
     printf("\n\n");
     fclose(f);  
     free(f);
+    return 0;
 }

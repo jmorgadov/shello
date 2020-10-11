@@ -72,7 +72,7 @@ int add_line (char* command, history_h* hh){
     hh->lines[hh->index] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
     strcpy(hh->lines[hh->index], command);
     hh->index = (hh->index+1)%HISTORY_MAX_SIZE;
-    
+
     int current_pos = hh->index - 1;
     if (current_pos < 0)
         current_pos = hh->count - 1;
@@ -80,18 +80,6 @@ int add_line (char* command, history_h* hh){
     fwrite("\n", sizeof(char), 1, hist);    
     fclose(hist);
     return 0;
-}
-
-void print_history_lines(history_h* hh){
-    FILE* hist = fopen("/shello_cmd_history", "r");
-    int linesCount = 0;
-    char* text = readf(hist, &linesCount);
-    char* line;
-    for (int i = 0; i < linesCount - 1; i++) {        
-        line = strtok(i == 0 ? text : NULL, "\n");
-        printf("[%d] %s\n", i + 1, line);
-    }
-    fclose(hist);
 }
 
 char* get_at(int index, history_h* hh){

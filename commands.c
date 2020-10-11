@@ -50,10 +50,6 @@ int execute(command_t* command){
     }
     else if (COMMAND_IS_("exit")){
         exit(0);
-    }    
-    else if (COMMAND_IS_("history")){
-        print_history_lines(history);
-        return 1;
     }
     else if (COMMAND_IS_("true")){
         return 1;
@@ -66,6 +62,11 @@ int execute(command_t* command){
         if (COMMAND_IS_("help")){
             command->name = "./build-in/help/help.out";
             command->args[0] = "help.out";
+        }
+
+        if (COMMAND_IS_("history")){
+            command->name = "./build-in/history/history.out";
+            command->args[0] = "history.out";
         }
 
         int child_pid = 0;
