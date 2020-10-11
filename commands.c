@@ -332,8 +332,8 @@ char* replace_again_commands(char* line)
             while (hist_line[hp] && hist_line[hp] != '\n'){
                 newLine[pos++] = hist_line[hp++];
             }
-            newLine[pos++] = ' ';
-            i = temp;
+            // newLine[pos++] = ' ';
+            i = temp - 1;
         }
         else{
             newLine[pos++] = line[i];

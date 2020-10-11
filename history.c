@@ -52,10 +52,6 @@ history_h* init_history_handler(){
 }
 
 int add_line (char* command, history_h* hh){
-    hh->count = (hh->count+1) > HISTORY_MAX_SIZE ? HISTORY_MAX_SIZE : (hh->count+1);    
-    hh->lines[hh->index] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
-    strcpy(hh->lines[hh->index], command);
-    hh->index = (hh->index+1)%HISTORY_MAX_SIZE;
 
     FILE* hist1 = fopen("/shello_cmd_history", "r");
     int linesCount = 0;
@@ -71,6 +67,12 @@ int add_line (char* command, history_h* hh){
         fwrite(line, sizeof(char), strlen(line), hist);
         fwrite("\n", sizeof(char), 1, hist);
     }
+
+    hh->count = (hh->count+1) > HISTORY_MAX_SIZE ? HISTORY_MAX_SIZE : (hh->count+1);    
+    hh->lines[hh->index] = (char*)malloc(sizeof(char)*LINE_BUFF_SIZE);
+    strcpy(hh->lines[hh->index], command);
+    hh->index = (hh->index+1)%HISTORY_MAX_SIZE;
+    
     int current_pos = hh->index - 1;
     if (current_pos < 0)
         current_pos = hh->count - 1;
