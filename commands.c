@@ -12,7 +12,6 @@
 #include "history.h"
 #include "strtools.h"
 #include "datastructs.h"
-#include "help.h"
 
 typedef int bool;
 
@@ -62,12 +61,13 @@ int execute(command_t* command){
     else if (COMMAND_IS_("false")){
         return 0;
     }
-    else if (COMMAND_IS_("help")){
-        show_command_help(command->args[1]);
-        return 1;
-    }
     else
     {
+        if (COMMAND_IS_("help")){
+            command->name = "./build-in/help/help.out";
+            command->args[0] = "help.out";
+        }
+
         int child_pid = 0;
         int status = 0;
         if (child_pid = fork()){
@@ -213,7 +213,7 @@ int execute_command_line(char** command_tokens, int tokens_count, char* line){
         else{
             temp_command[k++] = command_tokens[i];
         }
-    }
+    }    
 
     resolve_pipes(commands, c);
     int return_val = 0;
@@ -340,6 +340,7 @@ void process_line(char* line){
     char* newline = replace_again_commands(line);
 
     add_line(newline, history);
+
     // Separate execution steps by semicolon (;)
     int steps_count = 0;
     char** command_lines = parse_line(newline, &steps_count);
