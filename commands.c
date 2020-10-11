@@ -12,7 +12,6 @@
 #include "history.h"
 #include "strtools.h"
 #include "datastructs.h"
-#include "help.h"
 
 typedef int bool;
 
@@ -51,10 +50,6 @@ int execute(command_t* command){
     }
     else if (COMMAND_IS_("exit")){
         exit(0);
-    }    
-    else if (COMMAND_IS_("history")){
-        print_history_lines(history);
-        return 1;
     }
     else if (COMMAND_IS_("true")){
         return 1;
@@ -62,12 +57,18 @@ int execute(command_t* command){
     else if (COMMAND_IS_("false")){
         return 0;
     }
-    else if (COMMAND_IS_("help")){
-        show_command_help(command->args[1]);
-        return 1;
-    }
     else
     {
+        if (COMMAND_IS_("help")){
+            command->name = "./build-in/help/help.out";
+            command->args[0] = "help.out";
+        }
+
+        if (COMMAND_IS_("history")){
+            command->name = "./build-in/history/history.out";
+            command->args[0] = "history.out";
+        }
+
         int child_pid = 0;
         int status = 0;
         if (child_pid = fork()){
@@ -107,7 +108,10 @@ int execute(command_t* command){
                 close(o);
             
             
-            execvp(command->name, command->args);  
+            int return_val = execvp(command->name, command->args);  
+
+            
+
             FILE* out = command->out;
             FILE* in = command->in;
             if (out->_fileno && out->_fileno != 1){
@@ -121,6 +125,11 @@ int execute(command_t* command){
                 close(command->p_out);
             if (command->p_in != 0)
                 close(command->p_in);      
+            
+            if (return_val == -1){
+                printc(RED, "Error executing command '%s'\n", command->name);
+                exit(1);
+            }
             exit(0);
         }
     }    
@@ -167,12 +176,19 @@ char** resolve_files_in_out(char** commands, int len, FILE** in, FILE** out){
             }
         }
         else{
-            answ[answ_index++] = commands[i];
+            answ[answ_index++] = (char*)malloc(sizeof(char)*strlen(commands[i]));
+            strcpy(answ[answ_index - 1], commands[i]);
         }
     }    
-    char** final_answ = (char**)malloc(answ_index*sizeof(char*));
-    for (int i = 0; i < answ_index; i++)
-        final_answ[i] = answ[i];
+    char** final_answ = (char**)malloc((answ_index + 1)*sizeof(char*));
+    for (int i = 0; i <= answ_index; i++){
+        if (i == answ_index){
+            final_answ[i] = NULL;
+            break;
+        }
+        final_answ[i] = (char*)malloc(sizeof(char)*strlen(answ[i]));
+        strcpy(final_answ[i], answ[i]);
+    }
 
     if (infd->_fileno >= 0)
         *in = infd;
@@ -213,18 +229,7 @@ int execute_command_line(char** command_tokens, int tokens_count, char* line){
         else{
             temp_command[k++] = command_tokens[i];
         }
-    }
-
-    //check again command
-    if (STR_EQ(commands[0]->args[0], "again"))
-    {
-        int token_counts = 0;
-        char* command_line = get_at(atoi(commands[0]->args[1]) - 1, history);
-        if (command_line == NULL)
-            return 1;
-        process_line(command_line);
-        return 1;
-    }
+    }    
 
     resolve_pipes(commands, c);
     int return_val = 0;
@@ -332,8 +337,8 @@ char* replace_again_commands(char* line)
             while (hist_line[hp] && hist_line[hp] != '\n'){
                 newLine[pos++] = hist_line[hp++];
             }
-            newLine[pos++] = ' ';
-            i = temp;
+            // newLine[pos++] = ' ';
+            i = temp - 1;
         }
         else{
             newLine[pos++] = line[i];
@@ -351,6 +356,7 @@ void process_line(char* line){
     char* newline = replace_again_commands(line);
 
     add_line(newline, history);
+
     // Separate execution steps by semicolon (;)
     int steps_count = 0;
     char** command_lines = parse_line(newline, &steps_count);

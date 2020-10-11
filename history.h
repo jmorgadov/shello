@@ -12,6 +12,5 @@ typedef struct history_handler
 
 history_h* init_history_handler();
 int add_line (char* command, history_h* hh);
-void print_history_lines(history_h* hh);
 char* get_at (int index, history_h* hh);
 #endif
