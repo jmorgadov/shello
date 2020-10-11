@@ -215,17 +215,6 @@ int execute_command_line(char** command_tokens, int tokens_count, char* line){
         }
     }
 
-    //check again command
-    if (STR_EQ(commands[0]->args[0], "again"))
-    {
-        int token_counts = 0;
-        char* command_line = get_at(atoi(commands[0]->args[1]) - 1, history);
-        if (command_line == NULL)
-            return 1;
-        process_line(command_line);
-        return 1;
-    }
-
     resolve_pipes(commands, c);
     int return_val = 0;
     for (int i = 0; i < c; i++)
