@@ -12,6 +12,8 @@
 #include "history.h"
 #include "strtools.h"
 #include "datastructs.h"
+#include "parser/ast_structs.h"
+#include "parser/parser.h"
 
 typedef int bool;
 
@@ -22,28 +24,7 @@ typedef int bool;
 
 history_h* history = NULL;
 
-command_t* init_command(char* name, char** args){
-    command_t* comm = (command_t*)malloc(sizeof(command_t));
-    comm->name = name;
-    comm->args = args;
-    comm->in = NULL;
-    comm->out = NULL;  
-    comm->p_in = 0;
-    comm->p_out = 1;  
-    return comm;
-}
-
-void resolve_pipes(command_t** commands, int len){
-    for (int i = 1; i < len; i++)
-    {
-        int p[2];
-        pipe(p);
-        commands[i-1]->p_out = p[1];
-        commands[i]->p_in = p[0];
-    }    
-}
-
-int execute(command_t* command){   
+int execute_command(command_t* command){
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
         return 1;
@@ -108,9 +89,7 @@ int execute(command_t* command){
                 close(o);
             
             
-            int return_val = execvp(command->name, command->args);  
-
-            
+            int return_val = execvp(command->name, command->args);              
 
             FILE* out = command->out;
             FILE* in = command->in;
@@ -127,7 +106,7 @@ int execute(command_t* command){
                 close(command->p_in);      
             
             if (return_val == -1){
-                printc(RED, "Error executing command '%s'\n", command->name);
+                printc(BOLD_RED, "Error executing command '%s'\n", command->name);
                 exit(1);
             }
             exit(0);
@@ -135,179 +114,91 @@ int execute(command_t* command){
     }    
 }
 
-char** resolve_files_in_out(char** commands, int len, FILE** in, FILE** out){
-    FILE* infd = stdin;
-    FILE* outfd = stdout;
-    char** answ = (char**)malloc(len*sizeof(char*));
-    int answ_index = 0;
-    for (int i = 0; i < len; i++)
-    {
-        if (STR_EQ(commands[i], ">")){
-            char* path = commands[i + 1];
-            i++;
+int execute_io_command(io_command_t* io_cmd){
+    if (io_cmd->symbol){
+        char* path = io_cmd->file_path;
+        if (STR_EQ(io_cmd->symbol, ">")){
             FILE* fd = fopen(path, "w+");
             if (fd->_fileno < 2){
                 printc(RED, "Error creating file %s\n", path);
             }
             else{
-                outfd = fd;
+                io_cmd->command->out = fd;
             }
         }
-        else if (STR_EQ(commands[i], ">>")){
-            char* path = commands[i + 1];
-            i++;
+        else if (STR_EQ(io_cmd->symbol, ">>")){
             FILE* fd = fopen(path, "a+");
             if (fd->_fileno < 2){
                 printc(RED, "Error opening file %s\n", path);
             }
             else{
-                outfd = fd;
+                io_cmd->command->out = fd;
             }
         }
-        else if (STR_EQ(commands[i], "<")){
-            char* path = commands[i + 1];
-            i++;
+        else if (STR_EQ(io_cmd->symbol, "<")){
             FILE* fd = fopen(path, "r");
             if (fd->_fileno < 2){
                 printc(RED, "Error opening file %s\n", path);
             }
             else{
-                infd = fd;
+                io_cmd->command->in = fd;
             }
         }
-        else{
-            answ[answ_index++] = (char*)malloc(sizeof(char)*strlen(commands[i]));
-            strcpy(answ[answ_index - 1], commands[i]);
+    }
+    return execute_command(io_cmd->command);
+}
+
+int execute_piped_command(piped_command_t* piped_cmd){
+    for (int i = 1; i <= piped_cmd->pipes_count; i++){
+        int p[2];
+        pipe(p);
+        piped_cmd->io_command[i-1]->command->p_out = p[1];
+        piped_cmd->io_command[i]->command->p_in = p[0];
+    }
+    for (int i = 0; i <= piped_cmd->pipes_count; i++){
+        if (!execute_io_command(piped_cmd->io_command[i])){
+            return 0;
         }
+    }
+    return 1;
+}
+
+int execute_logic_command(logic_command_t* logic_cmd){
+    int result = execute_piped_command(logic_cmd->piped_command);
+    if (logic_cmd->operator){
+        if (STR_EQ(logic_cmd->operator, "&&") && result){
+            return execute_logic_command((logic_command_t*)logic_cmd->logic_command);
+        }
+        else if (STR_EQ(logic_cmd->operator, "||") && !result){
+            return execute_logic_command((logic_command_t*)logic_cmd->logic_command);            
+        }
+    }
+    return result;
+}
+
+void execute_comand_line(command_line_t* cmd_line){
+    for (int i = 0; i < cmd_line->commands_count; i++){
+        execute_logic_command(cmd_line->logic_commands[i]);
     }    
-    char** final_answ = (char**)malloc((answ_index + 1)*sizeof(char*));
-    for (int i = 0; i <= answ_index; i++){
-        if (i == answ_index){
-            final_answ[i] = NULL;
-            break;
-        }
-        final_answ[i] = (char*)malloc(sizeof(char)*strlen(answ[i]));
-        strcpy(final_answ[i], answ[i]);
-    }
-
-    if (infd->_fileno >= 0)
-        *in = infd;
-    if (outfd->_fileno >= 0)
-        *out = outfd;
-    return final_answ;    
 }
 
-command_t* get_command(char** command, int len){
-    FILE* in = stdin;
-    FILE* out = stdout;
-    char** comm = resolve_files_in_out(command, len, &in, &out);
-    command_t* temp = init_command(comm[0], comm);
-    temp->in = in;
-    temp->out = out;
-    return temp;
-}
-
-int execute_command_line(char** command_tokens, int tokens_count, char* line){
-    if (tokens_count == 0)
-        return 1;
-    char** temp_command = (char**)malloc(tokens_count*sizeof(char*));
-    command_t** commands = (command_t**)malloc(MAX_COMMAND_IN_LINE*sizeof(command_t*));
-
-    // Dividing commands by pipes
-    int k = 0;
-    int c = 0;
-    for (int i = 0; i <= tokens_count; i++){
-        if (i == tokens_count || STR_EQ(command_tokens[i], "|")) {
-            if (c == MAX_COMMAND_IN_LINE)
-            {
-                printc(RED, "Max command in line exceded\n");
-                exit(0);
-            }
-            commands[c++] = get_command(temp_command, k);
-            k = 0;
+char* separate_pipes(char* line){
+    char* answ = (char*)calloc(500, sizeof(char));
+    int len = strlen(line);
+    int answ_index = 0;
+    for (int i = 0; i < len; i++)
+    {
+        if (i > 0 && i < len - 1 && line[i] == '|' && line[i - 1] != '|' && line[i + 1] != '|'){
+            answ[answ_index++] = ' ';
+            answ[answ_index++] = '|';
+            answ[answ_index++] = ' ';
         }
         else{
-            temp_command[k++] = command_tokens[i];
-        }
-    }    
-
-    resolve_pipes(commands, c);
-    int return_val = 0;
-    for (int i = 0; i < c; i++)
-    {        
-        command_t* comm = commands[i];
-        return_val = execute(comm);
-    }  
-    return return_val;
-}
-
-int parse_and_execute(char* line){
-    int cmd_token_counts = 0;
-    char** cmd_tokens = split(line, &cmd_token_counts);
-    return execute_command_line(cmd_tokens, cmd_token_counts, line);
-}
-
-void execute_command_stack(my_stack_t* command_stack, my_stack_t* ops)
-{
-    for (int i = 0; i < ops->items->count; i++)
-    {
-        char* current_op = (char*)pop(ops);    
-        if (current_op != NULL){
-            if (STR_EQ(current_op, "&&")){
-                char* line = (char*)pop(command_stack);
-                int return_val = parse_and_execute(line);
-                if (return_val == 1)
-                    continue;
-                else
-                    return;
-            }
-            else if (STR_EQ(current_op, "||")){
-                char* line = (char*)pop(command_stack);
-                int return_val = parse_and_execute(line);
-                if (return_val == 0)
-                    continue;
-                else
-                    return;
-            }
-        }        
-    }
-    if (command_stack->items->count > 0){
-        char* line = (char*)pop(command_stack);
-        int return_val = parse_and_execute(line);
-    }
-    
-}
-
-my_stack_t* generate_command_stack(char* command_line, my_stack_t* ops){
-    my_stack_t* s = stackinit();
-    my_stack_t* temp = stackinit();
-    int token_counts = 0;
-    char* split_tokens[2];
-    split_tokens[0] = "&&";
-    split_tokens[1] = "||";
-    char** command_tokens = splitbyr(command_line, &token_counts, split_tokens, 2, 0);
-
-    for (int i = token_counts - 1; i >= 0; i--)
-    {
-        char* token = command_tokens[i];
-        if (STR_EQ(token, "&&") || STR_EQ(token, "||")){
-            push(ops, (char*)token);
-        }
-        else{
-            push(s, (char*)token);
+            answ[answ_index++] = line[i];            
         }
     }
-    for (int i = 0; i < temp->items->count; i++){
-        push(s, (char*)pop(temp));
-    }
-    return s;
-}
-
-char** parse_line(char* line, int* steps_count){
-    char* parse_tokens[1];
-    parse_tokens[0] = ";";
-    char** commands = splitby(line, steps_count, parse_tokens, 1);
-    return commands;
+    answ[answ_index] = 0;
+    return answ;
 }
 
 int is_digit(char c){
@@ -337,7 +228,7 @@ char* replace_again_commands(char* line)
             while (hist_line[hp] && hist_line[hp] != '\n'){
                 newLine[pos++] = hist_line[hp++];
             }
-            // newLine[pos++] = ' ';
+            newLine[pos++] = ' ';
             i = temp - 1;
         }
         else{
@@ -345,26 +236,23 @@ char* replace_again_commands(char* line)
         }
     }
     newLine[pos] = 0;
-    return newLine;
-    
+    return newLine;    
 }
 
-void process_line(char* line){
-    if (history == NULL)
+
+void execute_line(char* line){
+    if (!history)
         history = init_history_handler();
 
-    char* newline = replace_again_commands(line);
+    char* l1 = separate_pipes(line);
+    char* l2 = replace_again_commands(strdup(l1));
+    free(line);
+    free(l1);
 
-    add_line(newline, history);
+    command_line_t* cmd_line = parse_command_line(l2);
 
-    // Separate execution steps by semicolon (;)
-    int steps_count = 0;
-    char** command_lines = parse_line(newline, &steps_count);
+    add_line(line_str(cmd_line), history);
 
-    // Generate the stack and run the command of each command line 
-    for (int i = 0; i < steps_count; i++){
-        my_stack_t* ops = stackinit();
-        my_stack_t* current_command_stack = generate_command_stack(command_lines[i], ops);
-        execute_command_stack(current_command_stack, ops);
-    }    
+    execute_comand_line(cmd_line);
+
 }

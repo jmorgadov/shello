@@ -26,6 +26,8 @@ Functionalities status:
 
 #include "commands.h"
 #include "debug.h"
+#include "./parser/parser.h"
+#include "./parser/ast_structs.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -152,6 +154,7 @@ int main(int argc, char **args)
             continue;
             
         line_buff[buffer_index] = 0;
-        process_line(line_buff);        
+        execute_line(line_buff);       
     }    
+
 }

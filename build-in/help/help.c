@@ -34,7 +34,6 @@ int main(int argc, char **args){
         printf("%c", *buff);
     }
     printf("\n\n");
-    fclose(f);  
-    free(f);
+    fclose(f);
     return 0;
 }
