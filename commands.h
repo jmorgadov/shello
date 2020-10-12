@@ -18,5 +18,5 @@
 
 // command_t* init_command(char* name, char** args);
 // void process_line(char* line);
-void execute_line(char* line);
+void execute_shell_line(char* line);
 #endif

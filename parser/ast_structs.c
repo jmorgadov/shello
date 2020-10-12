@@ -3,6 +3,15 @@
 
 #define RESERVE(type) (type*)malloc(sizeof(type))
 
+line_t* init_line(command_line_t* cmd, line_t* if_cmd, line_t* then_cmd, line_t* else_cmd){
+    line_t* line = (line_t*)malloc(sizeof(line_t));
+    line->command_line = cmd;
+    line->if_command_line = (void*)if_cmd;
+    line->then_command_line = (void*)then_cmd;
+    line->else_command_line = (void*)else_cmd;
+    return line;
+}
+
 command_line_t* init_cmd_line(logic_command_t** logic_cmds, int cmds_count){
     command_line_t* cmd_line = RESERVE(command_line_t);
     cmd_line->logic_commands = logic_cmds;

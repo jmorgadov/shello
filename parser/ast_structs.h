@@ -36,10 +36,18 @@ typedef struct command_line{
     int commands_count;
 }command_line_t;
 
+typedef struct line{
+    command_line_t* command_line;
+    void* if_command_line;
+    void* then_command_line;
+    void* else_command_line;
+}line_t;
+
 command_line_t* init_cmd_line(logic_command_t** logic_cmds, int cmds_count);
 logic_command_t* init_logic_cmd(piped_command_t* piped_cmd, char* op, void* logic_cmd_right);
 piped_command_t* init_piped_cmd(io_command_t** io_cmds, int piped_cmds_count);
 io_command_t* init_io_cmd(command_t* cmd, char* symbol, char* file_path);
 command_t* init_cmd(char* name, char** args);
+line_t* init_line(command_line_t* cmd, line_t* if_cmd, line_t* then_cmd, line_t* else_cmd);
 
 #endif

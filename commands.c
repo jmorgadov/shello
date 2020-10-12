@@ -176,10 +176,29 @@ int execute_logic_command(logic_command_t* logic_cmd){
     return result;
 }
 
-void execute_comand_line(command_line_t* cmd_line){
+int execute_comand_line(command_line_t* cmd_line){
+    int result = 0;
     for (int i = 0; i < cmd_line->commands_count; i++){
-        execute_logic_command(cmd_line->logic_commands[i]);
-    }    
+        result = execute_logic_command(cmd_line->logic_commands[i]);
+    }   
+    return result; 
+}
+
+int execute_line(line_t* line){
+    int if_result = 0;
+    if (line->if_command_line){
+        if_result = execute_line((line_t*)line->if_command_line);
+        if (if_result && line->then_command_line){
+            return execute_line((line_t*)line->then_command_line);
+        }
+        else if (!if_result && line->else_command_line){
+            return execute_line((line_t*)line->else_command_line);
+        }
+    }
+    else{
+        return execute_comand_line(line->command_line);
+    }
+    return if_result;    
 }
 
 char* separate_pipes(char* line){
@@ -240,7 +259,7 @@ char* replace_again_commands(char* line)
 }
 
 
-void execute_line(char* line){
+void execute_shell_line(char* line){
     if (!history)
         history = init_history_handler();
 
@@ -249,11 +268,12 @@ void execute_line(char* line){
     // free(line);
     // free(l1);
 
-    command_line_t* cmd_line = parse_command_line(l2);
+    int index = 0;
+    line_t* cmd_line = parse_line(l2, &index, -1);
 
     char* str = line_str(cmd_line);
     add_line(str, history);
 
-    execute_comand_line(cmd_line);
+    execute_line(cmd_line);
 
 }

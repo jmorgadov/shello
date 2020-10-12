@@ -16,13 +16,11 @@ Functionalities status:
 - (12) History ------ OK
 - (13) Ctrl+C -------
 - (14) Chain -------- OK
-- (15) If -----------
-- (16) Multi-If -----
+- (15) If ----------- OK
+- (16) Multi-If ----- OK
 - (17) Help --------- OK
 - (18) Variables ----
 */
-
-
 
 #include "commands.h"
 #include "debug.h"
@@ -154,7 +152,7 @@ int main(int argc, char **args)
             continue;
             
         line_buff[buffer_index] = 0;
-        execute_line(line_buff);       
+        execute_shell_line(line_buff);       
     }    
 
 }
