@@ -181,7 +181,7 @@ int count_occurrencies(char* str, char* item){
             i += item_len - 1;
         }
     }
-    
+    return count;
 }
 
 char* replace(char* str, char* old, char* new){

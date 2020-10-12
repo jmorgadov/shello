@@ -26,7 +26,6 @@ int main(int argc, char **args){
     }
     else{
         printf("'%s' it's not a shello command\n\n", args[1]);
-        free(f);
         return 0;
     }
 

@@ -52,7 +52,7 @@ int execute_command(command_t* command){
 
         int child_pid = 0;
         int status = 0;
-        if (child_pid = fork()){
+        if ((child_pid = fork())){
             waitpid(child_pid, &status, W_OK);
             FILE* out = command->out;
             FILE* in = command->in;
@@ -246,12 +246,13 @@ void execute_line(char* line){
 
     char* l1 = separate_pipes(line);
     char* l2 = replace_again_commands(strdup(l1));
-    free(line);
-    free(l1);
+    // free(line);
+    // free(l1);
 
     command_line_t* cmd_line = parse_command_line(l2);
 
-    add_line(line_str(cmd_line), history);
+    char* str = line_str(cmd_line);
+    add_line(str, history);
 
     execute_comand_line(cmd_line);
 

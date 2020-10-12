@@ -20,14 +20,12 @@ command_t* parse_command(char *cmd){
 
 
 io_command_t* parse_io_command(char *io_cmd){
-    int token_counts = 0;
     int symbol_index = -1;
-    int len = strlen(io_cmd);
     int occ = first_occurrense(io_cmd, io_symbols, 2, 0, &symbol_index);
     command_t *cmd = parse_command(io_cmd);
 
     if (occ != -1){
-        io_cmd[occ] == 0;
+        io_cmd[occ] = 0;
         return init_io_cmd(cmd, io_symbols[symbol_index], remove_initial_spaces(io_cmd + occ + strlen(io_symbols[symbol_index])));
     }
     else{
@@ -51,13 +49,11 @@ piped_command_t* parse_piped_command(char *piped_cmd){
 }
 
 logic_command_t* parse_logic_command(char *logic_cmd){
-    int token_counts = 0;
     int symbol_index = -1;
     logic_command_t* right = NULL;
-    int len = strlen(logic_cmd);
     int occ = first_occurrense(logic_cmd, logic_symbols, 2, 0, &symbol_index);
     if (occ != -1){
-        logic_cmd[occ] == 0;
+        logic_cmd[occ] = 0;
         char *temp = (char*)malloc(sizeof(char)*(occ + 1));
         strcpy(temp, logic_cmd);
         temp[occ] = 0;

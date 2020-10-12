@@ -142,7 +142,7 @@ int main(int argc, char **args)
                     break;
             }
             if (ends_with(line_buff, UP_ARROW_KEY) || current == 9){
-                free(line_buff);
+                // free(line_buff);
                 line_buff = (char*)malloc(LINE_BUFF_SIZE*sizeof(char));
                 reset_line(buffer_index);
                 buffer_index = 0;             

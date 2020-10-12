@@ -16,6 +16,7 @@ linked_list_node_t* llninit(void* value){
     n->item = value;
     n->next = NULL;
     n->prev = NULL;
+    return n;
 }
 
 my_stack_t* stackinit(){
