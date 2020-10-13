@@ -16,16 +16,16 @@ Functionalities status:
 - (12) History ------ OK
 - (13) Ctrl+C -------
 - (14) Chain -------- OK
-- (15) If -----------
-- (16) Multi-If -----
+- (15) If ----------- OK
+- (16) Multi-If ----- OK
 - (17) Help --------- OK
 - (18) Variables ----
 */
 
-
-
 #include "commands.h"
 #include "debug.h"
+#include "./parser/parser.h"
+#include "./parser/ast_structs.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -140,7 +140,7 @@ int main(int argc, char **args)
                     break;
             }
             if (ends_with(line_buff, UP_ARROW_KEY) || current == 9){
-                free(line_buff);
+                // free(line_buff);
                 line_buff = (char*)malloc(LINE_BUFF_SIZE*sizeof(char));
                 reset_line(buffer_index);
                 buffer_index = 0;             
@@ -152,6 +152,7 @@ int main(int argc, char **args)
             continue;
             
         line_buff[buffer_index] = 0;
-        process_line(line_buff);        
+        execute_shell_line(line_buff);       
     }    
+
 }

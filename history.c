@@ -57,9 +57,8 @@ int add_line (char* command, history_h* hh){
     int linesCount = 0;
     char* text = readf(hist1, &linesCount);
     fclose(hist1);
-    remove("/shello_cmd_history");
 
-    FILE* hist = fopen("/shello_cmd_history", "w");
+    FILE* hist = fopen("/shello_cmd_history", "w+");
     char* line;
     for (int i = 0; i < linesCount - 1; i++) {   
         line = strtok(i == 0 ? text : NULL, "\n");
