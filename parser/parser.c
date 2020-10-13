@@ -11,7 +11,12 @@ command_t* parse_command(char *cmd){
     FILE* in = stdin;
     FILE* out = stdout;
     int tokens_count = 0;
-    char **comm = split(remove_unnecesary_spaces(cmd), &tokens_count);    
+    char **comm = split(remove_unnecesary_spaces(cmd), &tokens_count);
+    for (int i = 0; i < tokens_count; i++)
+    {
+        comm[i] = remove_str_repr(comm[i]);
+    }
+      
     command_t* temp = init_cmd(comm[0], comm);
     temp->in = in;
     temp->out = out;

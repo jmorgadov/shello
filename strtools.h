@@ -9,4 +9,5 @@ int first_occurrense(char *str, char **values, int values_count, int check_insid
 char* remove_initial_spaces(char* str);
 char* remove_unnecesary_spaces(char *line);
 char* replace(char* str, char* old, char* new);
+char* remove_str_repr(char* str);
 #endif

@@ -8,6 +8,7 @@ char *temp_buff;
 #define FALSE 0
 #define TRUE 1
 #define NOT(value) value == 0
+#define STR_EQ(s1,s2) strcmp(s1,s2) == 0
 
 typedef int bool;
 
@@ -189,7 +190,7 @@ char* replace(char* str, char* old, char* new){
     int old_len = strlen(old);
     int len = strlen(str);
     int answ_len = len + count_occurrencies(str, old) * (new_len - old_len);
-    char* answ = (char*)malloc(sizeof(char)*(answ_len + 1));
+    char* answ = (char*)calloc((answ_len + 1),sizeof(char));
     int answ_index = 0;
     for (int i = 0; i < len; i++)
     {
@@ -201,6 +202,13 @@ char* replace(char* str, char* old, char* new){
             answ[answ_index++] = str[i];
         }
     }
-    answ[answ_index] = 0;
     return answ;
+}
+
+char* remove_str_repr(char* str){
+    int len = strlen(str);
+    if (str[0] != '\"' || str[len - 1] != '\"')
+        return str;
+    str[len - 1] = 0;
+    return str + 1;
 }
