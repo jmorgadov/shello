@@ -12,9 +12,9 @@ command_t* parse_command(char *cmd){
     FILE* out = stdout;
     int tokens_count = 0;
     char **comm = split(remove_unnecesary_spaces(cmd), &tokens_count);
-    for (int i = 0; i < tokens_count; i++)
-    {
+    for (int i = 0; i < tokens_count; i++){
         comm[i] = remove_str_repr(comm[i]);
+        comm[i] = replace(comm[i], "\\\"", "\"");
     }
       
     command_t* temp = init_cmd(comm[0], comm);
@@ -23,7 +23,6 @@ command_t* parse_command(char *cmd){
     temp->args_count = tokens_count;
     return temp;
 }
-
 
 io_command_t* parse_io_command(char *io_cmd){
     int symbol_index = -1;

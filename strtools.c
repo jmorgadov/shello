@@ -197,6 +197,7 @@ char* replace(char* str, char* old, char* new){
         if (starts_with(str + i, old)){
             strcpy(answ + answ_index, new);
             answ_index += new_len;
+            i += old_len - 1;
         }
         else{
             answ[answ_index++] = str[i];
