@@ -27,22 +27,22 @@ logic_command_t* init_logic_cmd(piped_command_t* piped_cmd, char* op, void* logi
     return logic_cmd;
 }
 
-piped_command_t* init_piped_cmd(io_command_t** io_cmds, int piped_cmds_count){
+piped_command_t* init_piped_cmd(command_t** cmds, int piped_cmds_count){
     piped_command_t* piped_cmd = RESERVE(piped_command_t);
-    piped_cmd->io_command = io_cmds;
+    piped_cmd->commands = cmds;
     piped_cmd->pipes_count = piped_cmds_count;
     return piped_cmd;
 }
 
-io_command_t* init_io_cmd(command_t* cmd, char* symbol, char* file_path){
-    io_command_t* io_cmd = RESERVE(io_command_t);
-    io_cmd->command = cmd;
-    io_cmd->symbol = symbol;
-    io_cmd->file_path = file_path;
-    return io_cmd;
-}
+// io_command_t* init_io_cmd(command_t* cmd, char* symbol, char* file_path){
+//     io_command_t* io_cmd = RESERVE(io_command_t);
+//     io_cmd->command = cmd;
+//     io_cmd->symbol = symbol;
+//     io_cmd->file_path = file_path;
+//     return io_cmd;
+// }
 
-command_t* init_cmd(char* name, char** args){
+command_t* init_cmd(char* name, char** args, char* out_sym, char* out_arg, char* in_arg){
     command_t* comm = (command_t*)malloc(sizeof(command_t));
     comm->name = name;
     comm->args = args;
@@ -50,5 +50,8 @@ command_t* init_cmd(char* name, char** args){
     comm->out = NULL;  
     comm->p_in = 0;
     comm->p_out = 1;  
+    comm->out_symbol = out_sym;
+    comm->out_arg = out_arg;
+    comm->in_arg = in_arg;
     return comm;
 }
