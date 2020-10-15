@@ -58,7 +58,7 @@ char* line_buff;
 void printPrompt(){
     printc(BOLD_GREEN, "%s", SHELL_NAME);
     print(":");
-    printc(BOLD_CYAN, "%s", cwd);
+    printc(BOLD_BLUE, "%s", cwd);
     print("$ ");
 }
 

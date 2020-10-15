@@ -87,8 +87,7 @@ int execute_command(command_t* command){
                 close(i);
             if (o != 1)
                 close(o);
-            
-            
+                
             int return_val = execvp(command->name, command->args);              
 
             FILE* out = command->out;
@@ -114,49 +113,48 @@ int execute_command(command_t* command){
     }    
 }
 
-int execute_io_command(io_command_t* io_cmd){
-    if (io_cmd->symbol){
-        char* path = io_cmd->file_path;
-        if (STR_EQ(io_cmd->symbol, ">")){
-            FILE* fd = fopen(path, "w+");
+int execute_io_command(command_t* cmd){
+    if (cmd->out_symbol){
+        if (STR_EQ(cmd->out_symbol, ">")){
+            FILE* fd = fopen(cmd->out_arg, "w+");
             if (fd->_fileno < 2){
-                printc(RED, "Error creating file %s\n", path);
+                printc(RED, "Error creating file %s\n", cmd->out_arg);
             }
             else{
-                io_cmd->command->out = fd;
+                cmd->out = fd;
             }
         }
-        else if (STR_EQ(io_cmd->symbol, ">>")){
-            FILE* fd = fopen(path, "a+");
+        else if (STR_EQ(cmd->out_symbol, ">>")){
+            FILE* fd = fopen(cmd->out_arg, "a+");
             if (fd->_fileno < 2){
-                printc(RED, "Error opening file %s\n", path);
+                printc(RED, "Error opening file %s\n", cmd->out_arg);
             }
             else{
-                io_cmd->command->out = fd;
-            }
-        }
-        else if (STR_EQ(io_cmd->symbol, "<")){
-            FILE* fd = fopen(path, "r");
-            if (fd->_fileno < 2){
-                printc(RED, "Error opening file %s\n", path);
-            }
-            else{
-                io_cmd->command->in = fd;
+                cmd->out = fd;
             }
         }
     }
-    return execute_command(io_cmd->command);
+    if (cmd->in_arg){
+        FILE* fd = fopen(cmd->in_arg, "r");
+        if (fd->_fileno < 2){
+            printc(RED, "Error opening file %s\n", cmd->in_arg);
+        }
+        else{
+            cmd->in = fd;
+        }
+    }
+    return execute_command(cmd);
 }
 
 int execute_piped_command(piped_command_t* piped_cmd){
     for (int i = 1; i <= piped_cmd->pipes_count; i++){
         int p[2];
         pipe(p);
-        piped_cmd->io_command[i-1]->command->p_out = p[1];
-        piped_cmd->io_command[i]->command->p_in = p[0];
+        piped_cmd->commands[i-1]->p_out = p[1];
+        piped_cmd->commands[i]->p_in = p[0];
     }
     for (int i = 0; i <= piped_cmd->pipes_count; i++){
-        if (!execute_io_command(piped_cmd->io_command[i])){
+        if (!execute_io_command(piped_cmd->commands[i])){
             return 0;
         }
     }

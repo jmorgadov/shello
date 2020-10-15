@@ -6,22 +6,21 @@
 typedef struct command{
     char* name;
     char** args;    
+    char** raw_args;    
     FILE* in;
     FILE* out;
     int p_out;
     int p_in;
     int return_val;  
     int args_count;  
+    int raw_args_count;  
+    char* out_symbol;
+    char* out_arg;
+    char* in_arg;    
 }command_t;
 
-typedef struct io_command{
-    command_t *command;
-    char *symbol;
-    char *file_path;
-}io_command_t;
-
 typedef struct piped_command{
-    io_command_t **io_command;
+    command_t **commands;
     int pipes_count;
 }piped_command_t;
 
@@ -45,9 +44,8 @@ typedef struct line{
 
 command_line_t* init_cmd_line(logic_command_t** logic_cmds, int cmds_count);
 logic_command_t* init_logic_cmd(piped_command_t* piped_cmd, char* op, void* logic_cmd_right);
-piped_command_t* init_piped_cmd(io_command_t** io_cmds, int piped_cmds_count);
-io_command_t* init_io_cmd(command_t* cmd, char* symbol, char* file_path);
-command_t* init_cmd(char* name, char** args);
+piped_command_t* init_piped_cmd(command_t** cmds, int piped_cmds_count);
+command_t* init_cmd(char* name, char** args, char* out_sym, char* out_arg, char* in_arg);
 line_t* init_line(command_line_t* cmd, line_t* if_cmd, line_t* then_cmd, line_t* else_cmd);
 
 #endif

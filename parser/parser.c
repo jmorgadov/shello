@@ -1,5 +1,6 @@
 #include "ast_structs.h"
 #include "../strtools.h"
+#include "../debug.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -12,45 +13,74 @@ command_t* parse_command(char *cmd){
     FILE* out = stdout;
     int tokens_count = 0;
     char **comm = split(remove_unnecesary_spaces(cmd), &tokens_count);
-    for (int i = 0; i < tokens_count; i++){
-        comm[i] = remove_str_repr(comm[i]);
-        comm[i] = replace(comm[i], "\\\"", "\"");
+
+    char* symbol = NULL;
+    char* in_arg = NULL;
+    char* out_arg = NULL;
+
+    char** final_comm = (char**)calloc(tokens_count + 1, sizeof(char*));
+    int final_index = 0;
+    int raw_args_count = tokens_count;
+    for (int i = 0; i < tokens_count; i++)
+    {        
+        if (strcmp(comm[i], io_symbols[0]) == 0){ // >
+            symbol = io_symbols[0];
+            if (i == tokens_count - 1){
+                printc(BOLD_RED, "There is no path for > redirection\n");
+            }
+            out_arg = comm[i + 1];
+            i++;
+            raw_args_count-=2;
+        }
+        else if (strcmp(comm[i], io_symbols[1]) == 0){ // >>
+            symbol = io_symbols[1];
+            if (i == tokens_count - 1){
+                printc(BOLD_RED, "There is no path for >> redirection\n");
+            }
+            out_arg = comm[i + 1];
+            i++;
+            raw_args_count-=2;
+        }
+        else if (strcmp(comm[i], io_symbols[2]) == 0){ // <
+            symbol = io_symbols[2];
+            if (i == tokens_count - 1){
+                printc(BOLD_RED, "There is no path for << redirection\n");
+            }
+            in_arg = comm[i + 1];
+            i++;
+            raw_args_count-=2;
+        }
+        else{
+            final_comm[final_index++] = comm[i];
+        }
     }
-      
-    command_t* temp = init_cmd(comm[0], comm);
+    final_comm[final_index] = NULL;
+    for (int i = 0; i < final_index; i++){
+        final_comm[i] = remove_str_repr(final_comm[i]);
+        final_comm[i] = replace(final_comm[i], "\\\"", "\"");
+    }   
+
+    command_t* temp = init_cmd(final_comm[0], final_comm, symbol, out_arg, in_arg);
+    temp->raw_args = comm;
+    temp->raw_args_count = raw_args_count;
     temp->in = in;
     temp->out = out;
-    temp->args_count = tokens_count;
+    temp->args_count = final_index;
     return temp;
 }
-
-io_command_t* parse_io_command(char *io_cmd){
-    int symbol_index = -1;
-    int occ = first_occurrense(io_cmd, io_symbols, 2, 0, &symbol_index);
-    command_t *cmd = parse_command(io_cmd);
-
-    if (occ != -1){
-        io_cmd[occ] = 0;
-        return init_io_cmd(cmd, io_symbols[symbol_index], remove_initial_spaces(io_cmd + occ + strlen(io_symbols[symbol_index])));
-    }
-    else{
-        return init_io_cmd(cmd, NULL, NULL);
-    }
-}
-
 
 piped_command_t* parse_piped_command(char *piped_cmd){
     char* spl[1];
     spl[0] = " | ";
     int tokens_count = 0;
     char **cmds = splitby(piped_cmd, &tokens_count, spl, 1);
-    io_command_t **io_commands = (io_command_t**)malloc(sizeof(logic_command_t*)*tokens_count);
+    command_t **commands = (command_t**)malloc(sizeof(logic_command_t*)*tokens_count);
 
     for (int i = 0; i < tokens_count; i++){        
-        io_commands[i] = parse_io_command(cmds[i]);
+        commands[i] = parse_command(cmds[i]);
     }    
 
-    return init_piped_cmd(io_commands, tokens_count - 1);
+    return init_piped_cmd(commands, tokens_count - 1);
 }
 
 logic_command_t* parse_logic_command(char *logic_cmd){
@@ -190,45 +220,26 @@ void cmd_str(command_t* cmd, char* dest, int* index){
     for (int i = 0; i < cmd_len; i++){
         dest[idx++] = cmd->name[i];
     }
-    for (int i = 1; i < cmd->args_count; i++)
+    for (int i = 1; i < cmd->raw_args_count; i++)
     {
         dest[idx++] = ' ';
-        int arg_len = strlen(cmd->args[i]);
+        int arg_len = strlen(cmd->raw_args[i]);
         for (int j = 0; j < arg_len; j++){
-            dest[idx++] = cmd->args[i][j];
+            dest[idx++] = cmd->raw_args[i][j];
         }
     }    
     *index = idx;
 }
 
-void io_str(io_command_t* cmd, char* dest, int* index){
-    cmd_str(cmd->command, dest, index);
-
-    if (!cmd->symbol) return;
-
-    int sym_len = strlen(cmd->symbol);
-    int idx = *index;
-    for (int i = 0; i < sym_len; i++){
-        dest[idx++] = cmd->symbol[i];
-    }
-    dest[idx++] = ' ';
-    *index += 1;
-    int path_len = strlen(cmd->file_path);
-    for (int i = 0; i < path_len; i++){
-        dest[idx++] = cmd->file_path[i];
-    }    
-    *index = idx;
-}
-
 void pipe_str(piped_command_t* cmd, char* dest, int* index){
-    io_str(cmd->io_command[0], dest, index);
+    cmd_str(cmd->commands[0], dest, index);
     int idx = *index;
     for (int i = 0; i < cmd->pipes_count; i++)
     {
         dest[idx++] = ' ';
         dest[idx++] = '|';
         dest[idx++] = ' ';
-        io_str(cmd->io_command[i + 1], dest, index);
+        cmd_str(cmd->commands[i + 1], dest, index);
     }
     *index = idx;
     
