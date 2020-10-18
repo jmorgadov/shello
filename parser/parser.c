@@ -94,6 +94,9 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
     command_t* cmd = INIT(command_t);
     cmd->if_command = NULL;
     cmd->return_val = 0;
+    cmd->out_symbol = NULL;
+    cmd->out_arg = NULL;
+    cmd->in_arg = NULL;
     int command_parsed = 0;
 
     char** cmd_args = (char**)calloc(len + 1, sizeof(char*));
@@ -110,7 +113,7 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
             }
             *index = *index + 1;
             char* next_token_rep = get_token_repr(tokens[*index]);
-            if (token_repr){
+            if (next_token_rep){
                 cmd->in_arg = next_token_rep;
             }
             else{

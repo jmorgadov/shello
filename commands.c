@@ -287,9 +287,17 @@ char* replace_again_commands(char* line, int* error)
     char* newLine = (char*)malloc(sizeof(char)*500);
     char* number = (char*)malloc(sizeof(char)*10);
     int pos = 0;
+    int on_string = 0;
     for (int i = 0; i < len; i++)
     {
-        if (starts_with(line + i, "again") && (i == 0 || (i > 0 && line[i - 1] != '\\'))){
+        if (line[i] == '\"'){
+            if (on_string) 
+                on_string = 0;
+            else
+                on_string = 1;
+            continue;
+        }
+        if (!on_string && starts_with(line + i, "again") && (i == 0 || (i > 0 && line[i - 1] != '\\'))){
             int temp = i;
             temp += 5;
             while (line[temp] == ' ')
@@ -321,13 +329,21 @@ char* replace_again_commands(char* line, int* error)
     return newLine;    
 }
 
+char* comment[1] = {"#"};
 
 void execute_shell_line(char* line){
     if (!history)
         history = init_history_handler();
     int error = 0;
 
-    char* l2 = replace_again_commands(strdup(line), &error);
+    int vi = 0;
+    int occ = first_occurrense(line, comment, 1, 0, &vi);
+    char* l1 = strdup(line);
+    if (occ != -1){
+        strncpy(l1, line, occ);
+        l1[occ] = 0;
+    }
+    char* l2 = replace_again_commands(strdup(l1), &error);
 
     if (error){
         return;
