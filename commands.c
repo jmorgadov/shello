@@ -34,14 +34,6 @@ int default_p_out = 1;
 FILE* default_f_in = NULL;
 FILE* default_f_out = NULL;
 
-void sigint(){
-
-}
-
-void sigchld(){
-
-}
-
 void set_init_path(char* path){
     initial_path = path;    
 }

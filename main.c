@@ -105,18 +105,8 @@ void reset_line(int len){
         print("\b \b");  
 }
 
-void sigint_handler(){
-    sigint();
-}
-
-void sigchld_handler(){
-    sigchld();
-}
-
 int main(int argc, char **args)
 {
-    signal(SIGINT, sigint_handler);
-    signal(SIGCHLD, sigchld_handler);
 
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);
