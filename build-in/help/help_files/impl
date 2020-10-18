@@ -1,0 +1,76 @@
+SHELLO IMPLEMENTATION
+
+    Shello is a shell implementation using a language very smilar
+    to bach. 
+
+    LANGUAGE TOKENS:
+        Token         Value
+        --------------------
+        TEXT -------- Texto
+        IO_OUT ------ >
+        IO_OUT_A ---- >>
+        IO_IN ------- <
+        LOGIC_AND --- &&
+        LOGIC_OR ---- ||
+        PIPE -------- |
+        SEMICOLON --- ;
+        COND_IF ----- if
+        COND_ELSE --- else
+        COND_THEN --- then
+        COND_END ---- end
+
+    LANGUAGE GRAMMAR:
+
+        CMD_LINE := LOGIC_CMD SEMICOLON CMD_LINE
+                | LOGIC_CMD
+
+        LOGIC_CMD := PIPED_CMD LOGIC_AND LOGIC_CMD
+                | PIPED_CMD LOGIC_OR LOGIC_CMD
+                | PIPED_CMD
+
+        PIPED_CMD := IO_CMD PIPE IO_CMD
+                | IO_CMD
+
+        IO_CMD := IF_CMD IO_ARG
+                | IF_CMD 
+                | SIMPLE_CMD
+
+        IF_CMD := COND_IF CMD_LINE COND_THEN CMD_LINE COND_ELSE CMD_LINE COND_END
+                | COND_IF CMD_LINE COND_THEN CMD_LINE COND_END
+                | COND_IF CMD_LINE COND_ELSE CMD_LINE COND_END
+
+        SIMPLE_CMD := TEXT ARGS
+                    | TEXT
+
+        ARGS := IO_ARG ARGS
+            | IO_ARG
+            | TEXT ARGS
+            | TEXT
+
+        IO_ARG := IO_SYM TEXT IO_SYM
+                | IO_SYM TEXT
+
+        IO_SYM := IO_OUT
+            | IO_OUT_A
+            | IO_IN
+
+    PROCESS:
+
+        First the line is getted on the prompt.
+
+        Then all the (not escaped) 'again's commands are replaced by the 
+        command it represents on history. (This is done in 'commands.c' 
+        file).
+
+        After that, all tokens are genereted. This is done in 'tokenizer.c'
+        file).
+
+        The token array is then parsed and all the structs are initialized
+        in the correct order. This is done in 'parser.c' file).
+
+        Later the line is added to history. (This is done in 'history.c' file)
+
+        Finally the line is executed. (This is don in 'commands.c' file)
+
+        If any error occurs on one of this process then it is notified and the
+        line is not stored on history neither executed.

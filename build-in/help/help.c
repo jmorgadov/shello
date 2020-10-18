@@ -24,6 +24,9 @@ int main(int argc, char **args){
     else if (STR_EQ(args[1], "again")){
         f = fopen("./build-in/help/help_files/again", "r");
     }
+    else if (STR_EQ(args[1], "impl")){
+        f = fopen("./build-in/help/help_files/impl", "r");
+    }
     else if (STR_EQ(args[1], "if") || STR_EQ(args[1], "then") || STR_EQ(args[1], "else") || STR_EQ(args[1], "end")){
         f = fopen("./build-in/help/help_files/if", "r");
     }
