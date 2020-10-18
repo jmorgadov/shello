@@ -1,13 +1,19 @@
-Team: Jorge Morgado Vega, Andres A. Leon Almaguer
+Authors: Jorge Morgado Vega, Andres A. Leon Almaguer
 
-To see a specific command help type:
-help [COMMAND]
+    To see a specific command help type:
+    help [COMMAND]
 
-Commands:
-    - history
-    - true
-    - false
-    - exit
-    - again
+    Commands:
+        - true
+        - false
+        - if
+        - history
+        - again
+        - exit
+        - impl (Show info about the shell implementation)  
 
-Eg. help history
+    NOTE: To get the help of command 'again' you need to escape it
+          typing '\again'.
+
+    Eg. help history
+
