@@ -267,25 +267,6 @@ int execute_if_command(if_command_t* if_cmd){
     return if_result;    
 }
 
-char* separate_pipes(char* line){
-    char* answ = (char*)calloc(500, sizeof(char));
-    int len = strlen(line);
-    int answ_index = 0;
-    for (int i = 0; i < len; i++)
-    {
-        if (i > 0 && i < len - 1 && line[i] == '|' && line[i - 1] != '|' && line[i + 1] != '|'){
-            answ[answ_index++] = ' ';
-            answ[answ_index++] = '|';
-            answ[answ_index++] = ' ';
-        }
-        else{
-            answ[answ_index++] = line[i];            
-        }
-    }
-    answ[answ_index] = 0;
-    return answ;
-}
-
 int is_digit(char c){
     return c >= '0' && c <= '9';
 }
@@ -336,8 +317,7 @@ void execute_shell_line(char* line){
         history = init_history_handler();
     int error = 0;
 
-    char* l1 = separate_pipes(line);
-    char* l2 = replace_again_commands(strdup(l1), &error);
+    char* l2 = replace_again_commands(strdup(line), &error);
 
     if (error){
         return;
