@@ -14,6 +14,7 @@
 #include "datastructs.h"
 #include "parser/ast_structs.h"
 #include "parser/parser.h"
+#include <errno.h>
 
 typedef int bool;
 
@@ -35,9 +36,9 @@ void set_init_path(char* path){
     initial_path = path;    
 }
 
-int execute_if_command(if_command_t* if_cmd);
+int execute_if_command(if_command_t* if_cmd, int* error);
 
-int execute_command(command_t* command){
+int execute_command(command_t* command, int* error){
     if (command->if_command){
         int last_dp_in = default_p_in;
         int last_dp_out = default_p_out;
@@ -57,7 +58,7 @@ int execute_command(command_t* command){
             default_p_out = command->p_out;
         }
 
-        int ret_val = execute_if_command((if_command_t*)command->if_command);
+        int ret_val = execute_if_command((if_command_t*)command->if_command, error);
 
         if (default_p_in != 0 && default_p_in != last_dp_in){
             close(default_p_in);
@@ -79,6 +80,11 @@ int execute_command(command_t* command){
         default_f_out = last_df_out;
         return ret_val;
     }
+
+    if (!command->args_count){
+        return 1;
+    }
+
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
         return 1;
@@ -119,7 +125,6 @@ int execute_command(command_t* command){
             command->name = hist_path;
             command->args[0] = hist_path;
         }
-            
 
         if (!command->in){
             command->in = default_f_in;
@@ -148,6 +153,7 @@ int execute_command(command_t* command){
                 fclose(in);                
             } 
 
+            *error = status;            
 
             if (command->p_out != default_p_out && command->p_out != 1)
                 close(command->p_out);
@@ -174,8 +180,8 @@ int execute_command(command_t* command){
             if (o != 1)
                 close(o);
                 
-            int return_val = execvp(command->name, command->args);              
-
+            execvp(command->name, command->args);            
+            int es = errno;
             FILE* out = command->out;
             FILE* in = command->in;
             if (out && out->_fileno != 0 && out->_fileno != 1){
@@ -188,18 +194,17 @@ int execute_command(command_t* command){
             if (command->p_out != 1)
                 close(command->p_out);
             if (command->p_in != 0)
-                close(command->p_in);       
-            
-            if (return_val == -1){
-                printc(BOLD_RED, "Error executing command '%s'\n", command->name);
-                exit(1);
-            }
-            exit(0);
+                close(command->p_in);   
+                
+            if (es)
+                perror("shello");  
+
+            exit(es);
         }
     }    
 }
 
-int execute_io_command(command_t* cmd){
+int execute_io_command(command_t* cmd, int* error){
     if (cmd->out_symbol){
         if (STR_EQ(cmd->out_symbol, ">")){
             FILE* fd = fopen(cmd->out_arg, "w+");
@@ -229,50 +234,54 @@ int execute_io_command(command_t* cmd){
             cmd->in = fd;
         }
     }
-    return execute_command(cmd);
+    return execute_command(cmd, error);
 }
 
-int execute_piped_command(piped_command_t* piped_cmd){
+int execute_piped_command(piped_command_t* piped_cmd, int* error){
     if (piped_cmd->piped_command){
         int p[2];
         pipe(p);
         piped_cmd->command->p_out = p[1];
         ((piped_command_t*)piped_cmd->piped_command)->command->p_in = p[0];
-        execute_io_command(piped_cmd->command);
-        return execute_piped_command((piped_command_t*)piped_cmd->piped_command);
+        execute_io_command(piped_cmd->command, error);
+        if (*error) return 0;
+        return execute_piped_command((piped_command_t*)piped_cmd->piped_command, error);
     }
-    return execute_io_command(piped_cmd->command);
+    return execute_io_command(piped_cmd->command, error);
 }
 
-int execute_logic_command(logic_command_t* logic_cmd){
-    int result = execute_piped_command(logic_cmd->piped_command);
+int execute_logic_command(logic_command_t* logic_cmd, int* error){
+    int result = execute_piped_command(logic_cmd->piped_command, error);
+    if (*error) return 0;
     if (logic_cmd->operator){
         if (STR_EQ(logic_cmd->operator, "&&") && result){
-            return execute_logic_command((logic_command_t*)logic_cmd->logic_command);
+            return execute_logic_command((logic_command_t*)logic_cmd->logic_command, error);
         }
         else if (STR_EQ(logic_cmd->operator, "||") && !result){
-            return execute_logic_command((logic_command_t*)logic_cmd->logic_command);            
+            return execute_logic_command((logic_command_t*)logic_cmd->logic_command, error);            
         }
     }
     return result;
 }
 
-int execute_comand_line(command_line_t* cmd_line){
-    int result = execute_logic_command(cmd_line->logic_command);
+int execute_comand_line(command_line_t* cmd_line, int* error){
+    int result = execute_logic_command(cmd_line->logic_command, error);
+    if (*error) return 0;
     if (cmd_line->command_line){
-        result = execute_comand_line(cmd_line->command_line);
+        result = execute_comand_line(cmd_line->command_line, error);
     }    
     return result; 
 }
 
-int execute_if_command(if_command_t* if_cmd){
+int execute_if_command(if_command_t* if_cmd, int* error){
     int if_result = 0;
-    if_result = execute_comand_line(if_cmd->if_command_line);
+    if_result = execute_comand_line(if_cmd->if_command_line, error);
+    if (*error) return 0;
     if (if_result && if_cmd->then_command_line){
-        return execute_comand_line(if_cmd->then_command_line);
+        return execute_comand_line(if_cmd->then_command_line, error);
     }
     else if (!if_result && if_cmd->else_command_line){
-        return execute_comand_line(if_cmd->else_command_line);
+        return execute_comand_line(if_cmd->else_command_line, error);
     }
     return if_result;    
 }
@@ -357,6 +366,5 @@ void execute_shell_line(char* line){
     }
 
     add_line(line_repr, history);
-    execute_comand_line(cmd_line);
-
+    execute_comand_line(cmd_line, &error);
 }

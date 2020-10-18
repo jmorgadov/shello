@@ -156,18 +156,9 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
 
         }
         else if (is_symbol_token(current)){
-            if (!command_parsed){
-                // ERROR NO COMMAND FOUND
-                return print_error("Command not found", error);
-            }
             break;
         }
         else if (type_match_end_type(current->type, end_type)){
-            if (!command_parsed){
-                // ERROR NO COMMAND FOUND
-                return print_error("Command not found", error);
-            }
-            // *index = *index + 1;
             break;
         }
         else if (current->type == COND_IF && !command_parsed){
@@ -193,11 +184,6 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
             *error = 1;
             return NULL;
         }
-    }
-
-    if (!command_parsed){
-        // ERROR NO COMMAND FOUND
-        return print_error("No command found", error);
     }
 
     cmd_args[args_index] = NULL;
