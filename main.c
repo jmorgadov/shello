@@ -113,6 +113,8 @@ int main(int argc, char **args)
     int buffer_index = 0;
     char current = 0;
     int reading = TRUE;
+    getcwd(cwd, 500);
+    set_init_path(strdup(cwd));
     while (TRUE)
     {
         getcwd(cwd, 500);

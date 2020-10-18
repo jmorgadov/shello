@@ -14,7 +14,7 @@
 char* readf(FILE *file, int *__lines_count) { 
     int size = 1000;
     int lines = 1;
-    char* text = (char*)malloc(sizeof(char)*size);
+    char* text = (char*)calloc(size, sizeof(char));
     int i = 0;
     while (i < size) {   
         char b = fgetc(file);

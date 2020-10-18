@@ -22,12 +22,18 @@ typedef int bool;
 
 #define MAX_COMMAND_IN_LINE 10
 
+char* initial_path = NULL;
+
 history_h* history = NULL;
 
 int default_p_in = 0;
 int default_p_out = 1;
 FILE* default_f_in = NULL;
 FILE* default_f_out = NULL;
+
+void set_init_path(char* path){
+    initial_path = path;    
+}
 
 int execute_if_command(if_command_t* if_cmd);
 
@@ -89,13 +95,19 @@ int execute_command(command_t* command){
     else
     {
         if (COMMAND_IS_("help")){
-            command->name = "./build-in/help/help.out";
-            command->args[0] = "./build-in/help/help.out";
+            char* help_path = (char*)calloc(500, sizeof(char));
+            strcpy(help_path,initial_path);
+            strcat(help_path, "/build-in/help/help.out");
+            command->name = help_path;
+            command->args[0] = help_path;
         }
 
         if (COMMAND_IS_("history")){
-            command->name = "./build-in/history/history.out";
-            command->args[0] = "./build-in/history/history.out";
+            char* hist_path = (char*)calloc(500, sizeof(char));
+            strcpy(hist_path,initial_path);
+            strcat(hist_path, "/build-in/history/history.out");
+            command->name = hist_path;
+            command->args[0] = hist_path;
         }
             
 
