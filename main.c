@@ -28,6 +28,7 @@ Functionalities status:
 #include "./parser/ast_structs.h"
 #include <unistd.h>
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -104,8 +105,19 @@ void reset_line(int len){
         print("\b \b");  
 }
 
+void sigint_handler(){
+    sigint();
+}
+
+void sigchld_handler(){
+    sigchld();
+}
+
 int main(int argc, char **args)
 {
+    signal(SIGINT, sigint_handler);
+    signal(SIGCHLD, sigchld_handler);
+
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);
     printIntro();

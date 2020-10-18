@@ -12,6 +12,7 @@
 #include "history.h"
 #include "strtools.h"
 #include "datastructs.h"
+#include "pids_handler.h"
 #include "parser/ast_structs.h"
 #include "parser/parser.h"
 #include <errno.h>
@@ -26,11 +27,20 @@ typedef int bool;
 char* initial_path = NULL;
 
 history_h* history = NULL;
+pids_h* pids = NULL;
 
 int default_p_in = 0;
 int default_p_out = 1;
 FILE* default_f_in = NULL;
 FILE* default_f_out = NULL;
+
+void sigint(){
+
+}
+
+void sigchld(){
+
+}
 
 void set_init_path(char* path){
     initial_path = path;    
@@ -143,7 +153,7 @@ int execute_command(command_t* command, int* error){
         int child_pid = 0;
         int status = 0;
         if ((child_pid = fork())){
-            waitpid(child_pid, &status, W_OK);
+            add_pid(pids, child_pid, command);  
             FILE* out = command->out;
             FILE* in = command->in;
             if (out && out->_fileno != 0 && out->_fileno != 1 && out != default_f_out){
@@ -152,28 +162,25 @@ int execute_command(command_t* command, int* error){
             if (in && in->_fileno != 0 && in->_fileno != 1 && in != default_f_in){
                 fclose(in);                
             } 
-
-            *error = status;            
-
             if (command->p_out != default_p_out && command->p_out != 1)
                 close(command->p_out);
             if (command->p_in != default_p_in && command->p_in != 0)
-                close(command->p_in);  
+                close(command->p_in);            
             return status == 0;
         }
         else{
 
             int i = default_p_in;
             int o = default_p_out;
-            if (command->p_in != 0)
-                i = dup2(command->p_in, 0);
-            else if (command->in)
+            if (command->in)
                 i = dup2(command->in->_fileno, 0);
+            else if (command->p_in != 0)
+                i = dup2(command->p_in, 0);
 
-            if (command->p_out != 1)
-                o = dup2(command->p_out, 1);
-            else if (command->out)
+            if (command->out)
                 o = dup2(command->out->_fileno, 1);
+            else if (command->p_out != 1)
+                o = dup2(command->p_out, 1);
 
             if (i != 0)
                 close(i);
@@ -238,16 +245,45 @@ int execute_io_command(command_t* cmd, int* error){
 }
 
 int execute_piped_command(piped_command_t* piped_cmd, int* error){
-    if (piped_cmd->piped_command){
+    int commands_count = 0;
+    piped_command_t* temp = piped_cmd;
+
+    while (temp){
+        commands_count++;
+        temp = (piped_command_t*)temp->piped_command;
+    }
+
+    command_t** commands = (command_t**)calloc(commands_count, sizeof(command_t*));
+
+    temp = piped_cmd;
+    for (int i = 0; i < commands_count; i++)
+    {
+        commands[i] = temp->command;
+        temp = (piped_command_t*)temp->piped_command;            
+    }
+
+    for (int i = 1; i < commands_count; i++)
+    {
         int p[2];
         pipe(p);
-        piped_cmd->command->p_out = p[1];
-        ((piped_command_t*)piped_cmd->piped_command)->command->p_in = p[0];
-        execute_io_command(piped_cmd->command, error);
-        if (*error) return 0;
-        return execute_piped_command((piped_command_t*)piped_cmd->piped_command, error);
+        commands[i - 1]->p_out = p[1];
+        commands[i]->p_in = p[0];
     }
-    return execute_io_command(piped_cmd->command, error);
+
+    for (int i = 0; i < commands_count; i++)
+    {
+        execute_io_command(commands[i], error);            
+    }
+
+    int status = 0;
+    for (int i = 0; i < pids->pids_count; i++)
+    {          
+        waitpid(pids->pids[i], &status, 0);
+        *error = status;
+    }       
+
+    if (*error) return 0;
+    return status == 0;
 }
 
 int execute_logic_command(logic_command_t* logic_cmd, int* error){
@@ -343,6 +379,12 @@ char* comment[1] = {"#"};
 void execute_shell_line(char* line){
     if (!history)
         history = init_history_handler();
+
+    if (!pids)
+        pids = init_pids_handler();
+
+    reset_pidsh(pids);
+
     int error = 0;
 
     int vi = 0;
