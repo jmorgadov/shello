@@ -137,7 +137,7 @@ token_t** get_tokens(char* line, int* tokens_count, int* error){
                 add_token = 1;
                 tt = PIPE;
             }
-            else if (starts_with(line + i, "if") && (i + 2 > len || !is_letter(line[i + 2]))){
+            else if (!current_value_index && starts_with(line + i, "if") && (i + 2 > len || !is_letter(line[i + 2]))){
                 if (current_value_index){                
                     tokens[token_index++] = get_token(current_token_value, current_value_index, tt);
                 }
@@ -145,7 +145,7 @@ token_t** get_tokens(char* line, int* tokens_count, int* error){
                 i += 1;
                 tt = COND_IF;
             }
-            else if (starts_with(line + i, "then") && (i + 4 > len || !is_letter(line[i + 4]))){
+            else if (!current_value_index && starts_with(line + i, "then") && (i + 4 > len || !is_letter(line[i + 4]))){
                 if (current_value_index){                
                     tokens[token_index++] = get_token(current_token_value, current_value_index, tt);
                 }
@@ -153,7 +153,7 @@ token_t** get_tokens(char* line, int* tokens_count, int* error){
                 i += 3;
                 tt = COND_THEN;
             }
-            else if (starts_with(line + i, "else") && (i + 4 > len || !is_letter(line[i + 4]))){
+            else if (!current_value_index && starts_with(line + i, "else") && (i + 4 > len || !is_letter(line[i + 4]))){
                 if (current_value_index){                
                     tokens[token_index++] = get_token(current_token_value, current_value_index, tt);
                 }
@@ -161,7 +161,7 @@ token_t** get_tokens(char* line, int* tokens_count, int* error){
                 i += 3;
                 tt = COND_ELSE;
             }
-            else if (starts_with(line + i, "end") && (i + 3 > len || !is_letter(line[i + 3]))){
+            else if (!current_value_index && starts_with(line + i, "end") && (i + 3 > len || !is_letter(line[i + 3]))){
                 if (current_value_index){                
                     tokens[token_index++] = get_token(current_token_value, current_value_index, tt);
                 }

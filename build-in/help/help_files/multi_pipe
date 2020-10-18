@@ -1,0 +1,9 @@
+multi-pipe
+
+    Las tuberías múltiples fueron implementadas de la misma 
+    forma q una tubería simple. 
+
+    Se crean todas las tuberías necesarias y se le asigna a
+    cada comando su entrada y su salida.
+
+    Luego se ejecutan los comandos.

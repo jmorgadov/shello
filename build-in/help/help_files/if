@@ -1,15 +1,15 @@
-The command 'if' should be use in one of the following ways:
+El comando 'if' debe ser ejecutado en una de las sguientes formas:
 
-    if [COMMAND] else [COMMAND] end
-    if [COMMAND] then [COMMAND] end
-    if [COMMAND] then [COMMAND] else [COMMAND] end
+    if [COMANDO] else [COMANDO] end
+    if [COMANDO] then [COMANDO] end
+    if [COMANDO] then [COMANDO] else [COMANDO] end
 
-    It executes first 'if [COMMAND]', if the exit status of COMMAND 
-    is zero then the 'the [COMMAND]' is executed (if it exist). Otherwise
-    the 'else [COMMAND]' is executed.
+    Primero de ejecuta 'if [COMANDO]', si el exit status de COMANDO
+    es cero entonces se ejecuta 'then [COMANDO]' (si existe). En 
+    caso contrario 'else [COMANDO]' es ejecutado.
 
-    The exit status of executing an 'if' conditional is equals to the
-    exit stauts of the last COMMAND executed.
+    El exit status de una condicional es equivalente al exit status
+    del último comando ejecutado.
 
     Eg.
     
@@ -20,8 +20,8 @@ The command 'if' should be use in one of the following ways:
     if echo a else echo b end
     >>> a
 
-    A COMMAND can be any list of commands joined by a ';', or it
-    could even be another 'if' conditional.
+    Un COMANDO puede ser una lista de comandos separados por ; o
+    incluso puede ser otra condicional.
 
     Eg.
 

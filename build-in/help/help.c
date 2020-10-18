@@ -12,7 +12,7 @@ int main(int argc, char **args){
     char* path = (char*)calloc(100, sizeof(char));
     strcpy(path, args[1]);
     strcat(path, "/build-in/help/help_files/");
-    if (argc <= 2){
+    if (argc <= 2 || STR_EQ(args[2], "help")){
         strcat(path, "intro");
     }
     else if (STR_EQ(args[2], "true")){
@@ -30,7 +30,19 @@ int main(int argc, char **args){
     else if (STR_EQ(args[2], "impl")){
         strcat(path, "impl");
     }
-    else if (STR_EQ(args[2], "if") || STR_EQ(args[2], "then") || STR_EQ(args[2], "else") || STR_EQ(args[2], "end")){
+    else if (STR_EQ(args[2], "multi-pipe")){
+        strcat(path, "multi_pipe");
+    }
+    else if (STR_EQ(args[2], "spaces")){
+        strcat(path, "spaces");
+    }
+    else if (STR_EQ(args[2], "chain")){
+        strcat(path, "chain");
+    }
+    else if (STR_EQ(args[2], "basic")){
+        strcat(path, "basic");
+    }
+    else if (STR_EQ(args[2], "if") || STR_EQ(args[2], "then") || STR_EQ(args[2], "else") || STR_EQ(args[2], "end") || STR_EQ(args[2], "multi-if")){
         strcat(path, "if");
     }
     else{

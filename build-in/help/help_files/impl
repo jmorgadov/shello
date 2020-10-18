@@ -1,10 +1,11 @@
 SHELLO IMPLEMENTATION
 
-    Shello is a shell implementation using a language very smilar
-    to bach. 
+    Shello es la implementación de un shell usando un lenguaje
+    muy similar a bach. 
 
-    LANGUAGE TOKENS:
-        Token         Value
+    TOKENS:
+
+        Token         Valor
         --------------------
         TEXT -------- Texto
         IO_OUT ------ >
@@ -19,7 +20,8 @@ SHELLO IMPLEMENTATION
         COND_THEN --- then
         COND_END ---- end
 
-    LANGUAGE GRAMMAR:
+
+    GRAMÁTICA:
 
         CMD_LINE := LOGIC_CMD SEMICOLON CMD_LINE
                 | LOGIC_CMD
@@ -54,23 +56,27 @@ SHELLO IMPLEMENTATION
             | IO_OUT_A
             | IO_IN
 
-    PROCESS:
 
-        First the line is getted on the prompt.
+    PROCESO:
 
-        Then all the (not escaped) 'again's commands are replaced by the 
-        command it represents on history. (This is done in 'commands.c' 
-        file).
+        Primero es leida la linea en el prompt.
 
-        After that, all tokens are genereted. This is done in 'tokenizer.c'
-        file).
+        Luego se extrae todo lo que esté antes de un # (comando de 
+        comentario)
+        
+        Después de esto se sutituyen los comando again (que no estén
+        dentro de comillas)
 
-        The token array is then parsed and all the structs are initialized
-        in the correct order. This is done in 'parser.c' file).
+        Luego el toquenizer se encarga de generar todos los tokens
+        necesarios.
 
-        Later the line is added to history. (This is done in 'history.c' file)
+        Estos tokens mas adelantes son procesados por el parser el cual
+        genera una serie de estructuras anidadas que definen una línea
+        del prompt y cómo debe ser ejecutada.
 
-        Finally the line is executed. (This is don in 'commands.c' file)
+        Luego la línea es ñadida al history y ejecutada teniendo encuenta 
+        su estructura.
 
-        If any error occurs on one of this process then it is notified and the
-        line is not stored on history neither executed.
+        Si algún error ocurre en alguno de estos procesos es notificado 
+        en el shell con la mayor claridad posible y la línea en cuestión
+        no es añadida al history.

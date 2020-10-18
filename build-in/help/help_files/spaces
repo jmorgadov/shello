@@ -1,0 +1,6 @@
+spaces
+
+    Esta funcionalidad está implementada en el tokenizer.
+
+    El mismo sabe cuando separar un token de otro e ignora
+    espacios innecesarios.

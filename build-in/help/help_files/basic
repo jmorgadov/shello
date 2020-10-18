@@ -1,0 +1,23 @@
+basic
+
+    Funcionalidades báscas:
+
+        - Imprimir prompt
+        - Ejecución de comandos
+        - Cambio de directorio con el comando 'cd'
+        - Redirección de la entrada y salida de cada comando
+        - Uso de tuberías
+        - Mostrar el prompt nuevamente cuando se ejecute un comando
+        - Comentarios usando el caracter #
+
+    Para la redirección de la entrada y salida de cada comando usamos
+    las funciones 'fopen()' y le asignamos los parámetros en 
+    dependencia de el operador.
+
+    Para las tuberías usamos la función 'pipe()' creando dos file
+    descriptors para cada par de comandos. Estos file descriptors 
+    son cerrados una vez el comando ha terminado su ejecución. 
+    
+    En el comando 'impl' de la ayuda hay mas información de cómo está
+    estructurado el lenguaje.
+

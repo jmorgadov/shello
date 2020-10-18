@@ -1,5 +1,7 @@
 history
 
-    Return the las 10 commands used enumerated from 1 to 10. 
+    Imprime las ultimas 10 líneas ejecutadas en el shell enumeradas desde
+    la 1 a la 10.
 
-    To run one of the commands in history look for command `again` help.
+    Para volver a ejecutar alguna linea busque el comando 'again' en la
+    ayuda.

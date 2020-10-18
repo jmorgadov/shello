@@ -1,19 +1,28 @@
-Authors: Jorge Morgado Vega, Andres A. Leon Almaguer
+Integrantes: Jorge Morgado Vega, Andres A. Leon Almaguer
 
-    To see a specific command help type:
-    help [COMMAND]
+    Para ver la ayuda de cada funcionalidad:
+    help [COMANDO]
 
-    Commands:
-        - true
-        - false
-        - if
-        - history
-        - again
-        - exit
-        - impl (Show info about the shell implementation)  
+    Funcionalidades:
 
-    NOTE: To get the help of command 'again' you need to escape it
-          typing '\again'.
+        Nombre        Descripción                 Puntos
+       --------------------------------------------------
+        basic ------- Funcionalidades básicas     3.0
+        multi-pipe -- Múltiples tuberías          1.0
+        spaces ------ Cualquier cantidad de       0.5
+                      espacios entre los 
+                      comandos
+        history ----- Histroial de comandos de    0.5
+                      tamaño 10
+        chain ------- Operadores para encadenar   0.5
+                      comandos (&&, ||, ;)
+        if ---------- Expresiones condicionales   1.0
+        multi-if ---- Múltiples expresiones       0.5
+                      condicionales
+        help -------- Ayuda                       1.0
+        impl -------- Implementación del lenguaje 0.0
+       --------------------------------------------------  
+        TOTAL:                                    8.0
 
-    Eg. help history
+    Ej. help history
 
