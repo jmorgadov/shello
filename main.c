@@ -151,6 +151,7 @@ int main(int argc, char **args)
         if (buffer_index == 0)
             continue;
             
+        line_buff[buffer_index++] = ' ';
         line_buff[buffer_index] = 0;
         execute_shell_line(line_buff);       
     }    

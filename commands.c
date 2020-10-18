@@ -24,7 +24,55 @@ typedef int bool;
 
 history_h* history = NULL;
 
+int default_p_in = 0;
+int default_p_out = 1;
+FILE* default_f_in = NULL;
+FILE* default_f_out = NULL;
+
+int execute_if_command(if_command_t* if_cmd);
+
 int execute_command(command_t* command){
+    if (command->if_command){
+        int last_dp_in = default_p_in;
+        int last_dp_out = default_p_out;
+        FILE* last_df_in = default_f_in;
+        FILE* last_df_out = default_f_out;
+
+        if (command->in){
+            default_f_in = command->in;
+        }
+        if (command->out){
+            default_f_out = command->out;
+        }
+        if (command->p_in != 0){
+            default_p_in = command->p_in;
+        }
+        if (command->p_out != 1){
+            default_p_out = command->p_out;
+        }
+
+        int ret_val = execute_if_command((if_command_t*)command->if_command);
+
+        if (default_p_in != 0 && default_p_in != last_dp_in){
+            close(default_p_in);
+        }
+        if (default_p_out != 1 && default_p_out != last_dp_out){
+            close(default_p_out);
+        }
+
+        if (default_f_in && default_f_in->_fileno != 0 && default_f_in != last_df_in){
+            fclose(default_f_in);
+        }
+        if (default_f_out && default_f_out->_fileno != 1 && default_f_out != last_df_out){
+            fclose(default_f_out);
+        }
+
+        default_p_in = last_dp_in;
+        default_p_out = last_dp_out;
+        default_f_in = last_df_in;
+        default_f_out = last_df_out;
+        return ret_val;
+    }
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
         return 1;
@@ -42,12 +90,27 @@ int execute_command(command_t* command){
     {
         if (COMMAND_IS_("help")){
             command->name = "./build-in/help/help.out";
-            command->args[0] = "help.out";
+            command->args[0] = "./build-in/help/help.out";
         }
 
         if (COMMAND_IS_("history")){
             command->name = "./build-in/history/history.out";
-            command->args[0] = "history.out";
+            command->args[0] = "./build-in/history/history.out";
+        }
+            
+
+        if (!command->in){
+            command->in = default_f_in;
+        }
+        if (!command->out){
+            command->out = default_f_out;
+        }
+
+        if (command->p_in == 0 && !command->in){
+            command->p_in = default_p_in;
+        }
+        if (command->p_out == 1 && !command->out){
+            command->p_out = default_p_out;
         }
 
         int child_pid = 0;
@@ -56,31 +119,32 @@ int execute_command(command_t* command){
             waitpid(child_pid, &status, W_OK);
             FILE* out = command->out;
             FILE* in = command->in;
-            if (out->_fileno != 0 && out->_fileno != 1){
+            if (out && out->_fileno != 0 && out->_fileno != 1 && out != default_f_out){
                 fclose(out);
             }        
-            if (in->_fileno != 0 && in->_fileno != 1){
+            if (in && in->_fileno != 0 && in->_fileno != 1 && in != default_f_in){
                 fclose(in);                
             } 
 
 
-            if (command->p_out != 1)
+            if (command->p_out != default_p_out && command->p_out != 1)
                 close(command->p_out);
-            if (command->p_in != 0)
+            if (command->p_in != default_p_in && command->p_in != 0)
                 close(command->p_in);  
             return status == 0;
         }
         else{
-            int i = 0;
-            int o = 1;
+
+            int i = default_p_in;
+            int o = default_p_out;
             if (command->p_in != 0)
                 i = dup2(command->p_in, 0);
-            else
+            else if (command->in)
                 i = dup2(command->in->_fileno, 0);
 
             if (command->p_out != 1)
                 o = dup2(command->p_out, 1);
-            else
+            else if (command->out)
                 o = dup2(command->out->_fileno, 1);
 
             if (i != 0)
@@ -92,17 +156,17 @@ int execute_command(command_t* command){
 
             FILE* out = command->out;
             FILE* in = command->in;
-            if (out->_fileno && out->_fileno != 1){
-                fclose(out);                
+            if (out && out->_fileno != 0 && out->_fileno != 1){
+                fclose(out);
             }        
-            if (in->_fileno){
+            if (in && in->_fileno != 0 && in->_fileno != 1){
                 fclose(in);                
-            }      
+            }  
 
             if (command->p_out != 1)
                 close(command->p_out);
             if (command->p_in != 0)
-                close(command->p_in);      
+                close(command->p_in);       
             
             if (return_val == -1){
                 printc(BOLD_RED, "Error executing command '%s'\n", command->name);
@@ -147,18 +211,15 @@ int execute_io_command(command_t* cmd){
 }
 
 int execute_piped_command(piped_command_t* piped_cmd){
-    for (int i = 1; i <= piped_cmd->pipes_count; i++){
+    if (piped_cmd->piped_command){
         int p[2];
         pipe(p);
-        piped_cmd->commands[i-1]->p_out = p[1];
-        piped_cmd->commands[i]->p_in = p[0];
+        piped_cmd->command->p_out = p[1];
+        ((piped_command_t*)piped_cmd->piped_command)->command->p_in = p[0];
+        execute_io_command(piped_cmd->command);
+        return execute_piped_command((piped_command_t*)piped_cmd->piped_command);
     }
-    for (int i = 0; i <= piped_cmd->pipes_count; i++){
-        if (!execute_io_command(piped_cmd->commands[i])){
-            return 0;
-        }
-    }
-    return 1;
+    return execute_io_command(piped_cmd->command);
 }
 
 int execute_logic_command(logic_command_t* logic_cmd){
@@ -175,26 +236,21 @@ int execute_logic_command(logic_command_t* logic_cmd){
 }
 
 int execute_comand_line(command_line_t* cmd_line){
-    int result = 0;
-    for (int i = 0; i < cmd_line->commands_count; i++){
-        result = execute_logic_command(cmd_line->logic_commands[i]);
-    }   
+    int result = execute_logic_command(cmd_line->logic_command);
+    if (cmd_line->command_line){
+        result = execute_comand_line(cmd_line->command_line);
+    }    
     return result; 
 }
 
-int execute_line(line_t* line){
+int execute_if_command(if_command_t* if_cmd){
     int if_result = 0;
-    if (line->if_command_line){
-        if_result = execute_line((line_t*)line->if_command_line);
-        if (if_result && line->then_command_line){
-            return execute_line((line_t*)line->then_command_line);
-        }
-        else if (!if_result && line->else_command_line){
-            return execute_line((line_t*)line->else_command_line);
-        }
+    if_result = execute_comand_line(if_cmd->if_command_line);
+    if (if_result && if_cmd->then_command_line){
+        return execute_comand_line(if_cmd->then_command_line);
     }
-    else{
-        return execute_comand_line(line->command_line);
+    else if (!if_result && if_cmd->else_command_line){
+        return execute_comand_line(if_cmd->else_command_line);
     }
     return if_result;    
 }
@@ -230,7 +286,7 @@ char* replace_again_commands(char* line)
     int pos = 0;
     for (int i = 0; i < len; i++)
     {
-        if (starts_with(line + i, "again")){
+        if (starts_with(line + i, "again") && i > 0 && line[i - 1] != '\\'){
             int temp = i;
             temp += 5;
             while (line[temp] == ' ')
@@ -263,15 +319,14 @@ void execute_shell_line(char* line){
 
     char* l1 = separate_pipes(line);
     char* l2 = replace_again_commands(strdup(l1));
-    // free(line);
-    // free(l1);
 
-    int index = 0;
-    line_t* cmd_line = parse_line(l2, &index, -1);
-
-    char* str = line_str(cmd_line);
-    add_line(str, history);
-
-    execute_line(cmd_line);
+    int error = 0;
+    char* line_repr = NULL;
+    command_line_t* cmd_line = parse_line(l2, &line_repr, &error);
+    if (error){
+        return;
+    }
+    add_line(line_repr, history);
+    execute_comand_line(cmd_line);
 
 }
