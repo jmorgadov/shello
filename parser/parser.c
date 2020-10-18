@@ -65,7 +65,7 @@ if_command_t* try_parse_if_cmd(token_t** tokens, int len, int* index, int* error
         }
 
         if (last_cond_type == COND_ELSE){
-            if_cmd->then_command_line = try_parse_cmd_line(tokens, len, index, error, END_ET);
+            if_cmd->else_command_line = try_parse_cmd_line(tokens, len, index, error, END_ET);
             if (*error){
                 // ERROR PARSING ELSE COND
                 // return print_error("Message", error);
@@ -96,7 +96,7 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
     cmd->return_val = 0;
     int command_parsed = 0;
 
-    char** cmd_args = (char**)calloc(len, sizeof(char*));
+    char** cmd_args = (char**)calloc(len + 1, sizeof(char*));
     int args_index = 0;
 
     for (; *index < len; *index = *index + 1)
