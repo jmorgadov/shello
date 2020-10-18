@@ -1,0 +1,36 @@
+The command 'if' should be use in one of the following ways:
+
+    if [COMMAND] else [COMMAND] end
+    if [COMMAND] then [COMMAND] end
+    if [COMMAND] then [COMMAND] else [COMMAND] end
+
+    It executes first 'if [COMMAND]', if the exit status of COMMAND 
+    is zero then the 'the [COMMAND]' is executed (if it exist). Otherwise
+    the 'else [COMMAND]' is executed.
+
+    The exit status of executing an 'if' conditional is equals to the
+    exit stauts of the last COMMAND executed.
+
+    Eg.
+    
+    if echo a then echo b end
+    >>> a
+    >>> b
+
+    if echo a else echo b end
+    >>> a
+
+    A COMMAND can be any list of commands joined by a ';', or it
+    could even be another 'if' conditional.
+
+    Eg.
+
+    if echo a; echo b then echo c else echo d end
+    >>> a
+    >>> b
+    >>> c
+
+    if echo a then if echo b else echo c end; echo d else echo e end
+    >>> a
+    >>> b
+    >>> d

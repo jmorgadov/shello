@@ -24,6 +24,9 @@ int main(int argc, char **args){
     else if (STR_EQ(args[1], "again")){
         f = fopen("./build-in/help/help_files/again", "r");
     }
+    else if (STR_EQ(args[1], "if") || STR_EQ(args[1], "then") || STR_EQ(args[1], "else") || STR_EQ(args[1], "end")){
+        f = fopen("./build-in/help/help_files/if", "r");
+    }
     else{
         printf("'%s' it's not a shello command\n\n", args[1]);
         return 0;
