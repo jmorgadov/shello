@@ -9,11 +9,12 @@
 #define TRUE 1
 #define FALSE 0
 #define LINE_BUFF_SIZE 500 
+#define HISTORY_PATH "/.shello_cmd_history"
 
 char* readf(FILE *file, int *__lines_count) { 
     int size = 1000;
     int lines = 1;
-    char* text = (char*)malloc(sizeof(char)*size);
+    char* text = (char*)calloc(size, sizeof(char));
     int i = 0;
     while (i < size) {   
         char b = fgetc(file);
@@ -29,9 +30,9 @@ char* readf(FILE *file, int *__lines_count) {
 history_h* init_history_handler(){
     history_h* hh =(history_h*) malloc(sizeof(history_h));
     
-    FILE* hist1 = fopen("/shello_cmd_history", "a");
+    FILE* hist1 = fopen(HISTORY_PATH, "a");
     fclose(hist1);
-    FILE* hist2 = fopen("/shello_cmd_history", "rw");
+    FILE* hist2 = fopen(HISTORY_PATH, "rw");
     int linesCount = 0;
     char* text = readf(hist2, &linesCount);
     fclose(hist2);
@@ -53,12 +54,12 @@ history_h* init_history_handler(){
 
 int add_line (char* command, history_h* hh){
 
-    FILE* hist1 = fopen("/shello_cmd_history", "r");
+    FILE* hist1 = fopen(HISTORY_PATH, "r");
     int linesCount = 0;
     char* text = readf(hist1, &linesCount);
     fclose(hist1);
 
-    FILE* hist = fopen("/shello_cmd_history", "w+");
+    FILE* hist = fopen(HISTORY_PATH, "w+");
     char* line;
     for (int i = 0; i < linesCount - 1; i++) {   
         line = strtok(i == 0 ? text : NULL, "\n");

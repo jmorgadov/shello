@@ -1,5 +1,5 @@
-again [NUMBER]
+again [POS]
 
-    Runs a command from history specified by its number.
+    Ejecuta el comando número POS del history.
 
-    Eg. again 3
+    Ej. again 3

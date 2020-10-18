@@ -12,8 +12,10 @@
 #include "history.h"
 #include "strtools.h"
 #include "datastructs.h"
+#include "pids_handler.h"
 #include "parser/ast_structs.h"
 #include "parser/parser.h"
+#include <errno.h>
 
 typedef int bool;
 
@@ -22,9 +24,69 @@ typedef int bool;
 
 #define MAX_COMMAND_IN_LINE 10
 
-history_h* history = NULL;
+char* initial_path = NULL;
 
-int execute_command(command_t* command){
+history_h* history = NULL;
+pids_h* pids = NULL;
+
+int default_p_in = 0;
+int default_p_out = 1;
+FILE* default_f_in = NULL;
+FILE* default_f_out = NULL;
+
+void set_init_path(char* path){
+    initial_path = path;    
+}
+
+int execute_if_command(if_command_t* if_cmd, int* error);
+
+int execute_command(command_t* command, int* error){
+    if (command->if_command){
+        int last_dp_in = default_p_in;
+        int last_dp_out = default_p_out;
+        FILE* last_df_in = default_f_in;
+        FILE* last_df_out = default_f_out;
+
+        if (command->in){
+            default_f_in = command->in;
+        }
+        if (command->out){
+            default_f_out = command->out;
+        }
+        if (command->p_in != 0){
+            default_p_in = command->p_in;
+        }
+        if (command->p_out != 1){
+            default_p_out = command->p_out;
+        }
+
+        int ret_val = execute_if_command((if_command_t*)command->if_command, error);
+
+        if (default_p_in != 0 && default_p_in != last_dp_in){
+            close(default_p_in);
+        }
+        if (default_p_out != 1 && default_p_out != last_dp_out){
+            close(default_p_out);
+        }
+
+        if (default_f_in && default_f_in->_fileno != 0 && default_f_in != last_df_in){
+            fclose(default_f_in);
+        }
+        if (default_f_out && default_f_out->_fileno != 1 && default_f_out != last_df_out){
+            fclose(default_f_out);
+        }
+
+        default_p_in = last_dp_in;
+        default_p_out = last_dp_out;
+        default_f_in = last_df_in;
+        default_f_out = last_df_out;
+        return ret_val;
+    }
+
+    if (!command->args_count){
+        return 1;
+    }
+
     if (COMMAND_IS_("cd")){
         chdir(command->args[1]);
         return 1;
@@ -41,79 +103,107 @@ int execute_command(command_t* command){
     else
     {
         if (COMMAND_IS_("help")){
-            command->name = "./build-in/help/help.out";
-            command->args[0] = "help.out";
+            char* help_path = (char*)calloc(500, sizeof(char));
+            strcpy(help_path,initial_path);
+            strcat(help_path, "/build-in/help/help.out");
+            command->name = help_path;
+            command->args[0] = help_path;
+            if (command->args[1]){
+                char* comm = strdup(command->args[1]);
+                command->args[1] = strdup(initial_path);
+                command->args[2] = comm;
+                command->args[3] = NULL;
+            }
+            else{
+                command->args[1] = strdup(initial_path);
+                command->args[2] = NULL;
+            }
         }
 
         if (COMMAND_IS_("history")){
-            command->name = "./build-in/history/history.out";
-            command->args[0] = "history.out";
+            char* hist_path = (char*)calloc(500, sizeof(char));
+            strcpy(hist_path,initial_path);
+            strcat(hist_path, "/build-in/history/history.out");
+            command->name = hist_path;
+            command->args[0] = hist_path;
+        }
+
+        if (!command->in){
+            command->in = default_f_in;
+        }
+        if (!command->out){
+            command->out = default_f_out;
+        }
+
+        if (command->p_in == 0 && !command->in){
+            command->p_in = default_p_in;
+        }
+        if (command->p_out == 1 && !command->out){
+            command->p_out = default_p_out;
         }
 
         int child_pid = 0;
         int status = 0;
         if ((child_pid = fork())){
-            waitpid(child_pid, &status, W_OK);
+            add_pid(pids, child_pid, command);  
             FILE* out = command->out;
             FILE* in = command->in;
-            if (out->_fileno != 0 && out->_fileno != 1){
+            if (out && out->_fileno != 0 && out->_fileno != 1 && out != default_f_out){
                 fclose(out);
             }        
-            if (in->_fileno != 0 && in->_fileno != 1){
+            if (in && in->_fileno != 0 && in->_fileno != 1 && in != default_f_in){
                 fclose(in);                
             } 
-
-
-            if (command->p_out != 1)
+            if (command->p_out != default_p_out && command->p_out != 1)
                 close(command->p_out);
-            if (command->p_in != 0)
-                close(command->p_in);  
+            if (command->p_in != default_p_in && command->p_in != 0)
+                close(command->p_in);            
             return status == 0;
         }
         else{
-            int i = 0;
-            int o = 1;
-            if (command->p_in != 0)
-                i = dup2(command->p_in, 0);
-            else
-                i = dup2(command->in->_fileno, 0);
 
-            if (command->p_out != 1)
-                o = dup2(command->p_out, 1);
-            else
+            int i = default_p_in;
+            int o = default_p_out;
+            if (command->in)
+                i = dup2(command->in->_fileno, 0);
+            else if (command->p_in != 0)
+                i = dup2(command->p_in, 0);
+
+            if (command->out)
                 o = dup2(command->out->_fileno, 1);
+            else if (command->p_out != 1)
+                o = dup2(command->p_out, 1);
 
             if (i != 0)
                 close(i);
             if (o != 1)
                 close(o);
                 
-            int return_val = execvp(command->name, command->args);              
-
+            execvp(command->name, command->args);            
+            int es = errno;
             FILE* out = command->out;
             FILE* in = command->in;
-            if (out->_fileno && out->_fileno != 1){
-                fclose(out);                
+            if (out && out->_fileno != 0 && out->_fileno != 1){
+                fclose(out);
             }        
-            if (in->_fileno){
+            if (in && in->_fileno != 0 && in->_fileno != 1){
                 fclose(in);                
-            }      
+            }  
 
             if (command->p_out != 1)
                 close(command->p_out);
             if (command->p_in != 0)
-                close(command->p_in);      
-            
-            if (return_val == -1){
-                printc(BOLD_RED, "Error executing command '%s'\n", command->name);
-                exit(1);
-            }
-            exit(0);
+                close(command->p_in);   
+                
+            if (es)
+                perror("shello");  
+
+            exit(es);
         }
     }    
 }
 
-int execute_io_command(command_t* cmd){
+int execute_io_command(command_t* cmd, int* error){
     if (cmd->out_symbol){
         if (STR_EQ(cmd->out_symbol, ">")){
             FILE* fd = fopen(cmd->out_arg, "w+");
@@ -143,101 +233,121 @@ int execute_io_command(command_t* cmd){
             cmd->in = fd;
         }
     }
-    return execute_command(cmd);
+    return execute_command(cmd, error);
 }
 
-int execute_piped_command(piped_command_t* piped_cmd){
-    for (int i = 1; i <= piped_cmd->pipes_count; i++){
+int execute_piped_command(piped_command_t* piped_cmd, int* error){
+    int commands_count = 0;
+    piped_command_t* temp = piped_cmd;
+
+    while (temp){
+        commands_count++;
+        temp = (piped_command_t*)temp->piped_command;
+    }
+
+    command_t** commands = (command_t**)calloc(commands_count, sizeof(command_t*));
+
+    temp = piped_cmd;
+    for (int i = 0; i < commands_count; i++)
+    {
+        commands[i] = temp->command;
+        temp = (piped_command_t*)temp->piped_command;            
+    }
+
+    for (int i = 1; i < commands_count; i++)
+    {
         int p[2];
         pipe(p);
-        piped_cmd->commands[i-1]->p_out = p[1];
-        piped_cmd->commands[i]->p_in = p[0];
+        commands[i - 1]->p_out = p[1];
+        commands[i]->p_in = p[0];
     }
-    for (int i = 0; i <= piped_cmd->pipes_count; i++){
-        if (!execute_io_command(piped_cmd->commands[i])){
-            return 0;
-        }
+
+    for (int i = 0; i < commands_count; i++)
+    {
+        execute_io_command(commands[i], error);            
     }
-    return 1;
+
+    int status = 0;
+    for (int i = 0; i < pids->pids_count; i++)
+    {          
+        waitpid(pids->pids[i], &status, 0);
+        *error = status;
+    }       
+
+    if (*error) return 0;
+    return status == 0;
 }
 
-int execute_logic_command(logic_command_t* logic_cmd){
-    int result = execute_piped_command(logic_cmd->piped_command);
+int execute_logic_command(logic_command_t* logic_cmd, int* error){
+    int result = execute_piped_command(logic_cmd->piped_command, error);
+    if (*error) return 0;
     if (logic_cmd->operator){
         if (STR_EQ(logic_cmd->operator, "&&") && result){
-            return execute_logic_command((logic_command_t*)logic_cmd->logic_command);
+            return execute_logic_command((logic_command_t*)logic_cmd->logic_command, error);
         }
         else if (STR_EQ(logic_cmd->operator, "||") && !result){
-            return execute_logic_command((logic_command_t*)logic_cmd->logic_command);            
+            return execute_logic_command((logic_command_t*)logic_cmd->logic_command, error);            
         }
     }
     return result;
 }
 
-int execute_comand_line(command_line_t* cmd_line){
-    int result = 0;
-    for (int i = 0; i < cmd_line->commands_count; i++){
-        result = execute_logic_command(cmd_line->logic_commands[i]);
-    }   
+int execute_comand_line(command_line_t* cmd_line, int* error){
+    int result = execute_logic_command(cmd_line->logic_command, error);
+    if (*error) return 0;
+    if (cmd_line->command_line){
+        result = execute_comand_line(cmd_line->command_line, error);
+    }    
     return result; 
 }
 
-int execute_line(line_t* line){
+int execute_if_command(if_command_t* if_cmd, int* error){
     int if_result = 0;
-    if (line->if_command_line){
-        if_result = execute_line((line_t*)line->if_command_line);
-        if (if_result && line->then_command_line){
-            return execute_line((line_t*)line->then_command_line);
-        }
-        else if (!if_result && line->else_command_line){
-            return execute_line((line_t*)line->else_command_line);
-        }
+    if_result = execute_comand_line(if_cmd->if_command_line, error);
+    if (*error) return 0;
+    if (if_result && if_cmd->then_command_line){
+        return execute_comand_line(if_cmd->then_command_line, error);
     }
-    else{
-        return execute_comand_line(line->command_line);
+    else if (!if_result && if_cmd->else_command_line){
+        return execute_comand_line(if_cmd->else_command_line, error);
     }
     return if_result;    
-}
-
-char* separate_pipes(char* line){
-    char* answ = (char*)calloc(500, sizeof(char));
-    int len = strlen(line);
-    int answ_index = 0;
-    for (int i = 0; i < len; i++)
-    {
-        if (i > 0 && i < len - 1 && line[i] == '|' && line[i - 1] != '|' && line[i + 1] != '|'){
-            answ[answ_index++] = ' ';
-            answ[answ_index++] = '|';
-            answ[answ_index++] = ' ';
-        }
-        else{
-            answ[answ_index++] = line[i];            
-        }
-    }
-    answ[answ_index] = 0;
-    return answ;
 }
 
 int is_digit(char c){
     return c >= '0' && c <= '9';
 }
 
-char* replace_again_commands(char* line)
+char* replace_again_commands(char* line, int* error)
 {
     int len = strlen(line);
     char* newLine = (char*)malloc(sizeof(char)*500);
     char* number = (char*)malloc(sizeof(char)*10);
     int pos = 0;
+    int on_string = 0;
     for (int i = 0; i < len; i++)
     {
-        if (starts_with(line + i, "again")){
+        if (line[i] == '\"'){
+            if (on_string) 
+                on_string = 0;
+            else
+                on_string = 1;
+            continue;
+        }
+        if (!on_string && starts_with(line + i, "again") && (i == 0 || (i > 0 && line[i - 1] != '\\'))){
             int temp = i;
             temp += 5;
             while (line[temp] == ' ')
                 temp++;
             int np = 0;
-            while (is_digit(line[temp])){
+            while (temp < len && is_digit(line[temp])){
                 number[np++] = line[temp++];
+            }
+            if (np == 0){
+                *error = 1;
+                printc(BOLD_RED, "No number after \'again\' command\n");
+                printc(BOLD_YELLOW, "NOTE: If you want to escape \'again\' command type \'\\again\'\n");
+                return NULL;
             }
             number[np] = 0;
             char* hist_line = get_at(atoi(number) - 1, history);
@@ -256,22 +366,39 @@ char* replace_again_commands(char* line)
     return newLine;    
 }
 
+char* comment[1] = {"#"};
 
 void execute_shell_line(char* line){
     if (!history)
         history = init_history_handler();
 
-    char* l1 = separate_pipes(line);
-    char* l2 = replace_again_commands(strdup(l1));
-    // free(line);
-    // free(l1);
+    if (!pids)
+        pids = init_pids_handler();
 
-    int index = 0;
-    line_t* cmd_line = parse_line(l2, &index, -1);
+    reset_pidsh(pids);
 
-    char* str = line_str(cmd_line);
-    add_line(str, history);
+    int error = 0;
 
-    execute_line(cmd_line);
+    int vi = 0;
+    int occ = first_occurrense(line, comment, 1, 0, &vi);
+    char* l1 = strdup(line);
+    if (occ != -1){
+        strncpy(l1, line, occ);
+        l1[occ] = 0;
+    }
+    char* l2 = replace_again_commands(strdup(l1), &error);
 
+    if (error){
+        return;
+    }
+
+    char* line_repr = NULL;
+    command_line_t* cmd_line = parse_line(l2, &line_repr, &error);
+
+    if (error){
+        return;
+    }
+
+    add_line(line_repr, history);
+    execute_comand_line(cmd_line, &error);
 }

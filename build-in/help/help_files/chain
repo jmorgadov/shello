@@ -1,0 +1,9 @@
+chain
+
+    Los comandos de encadenamiento permiten aplicar operaciones
+    lógicas entre varios comando teniendo en cuenta sus exit
+    status.
+
+    La implementación de esta funcionalidad esta dada según la 
+    estructura creada para ejecutar los comandos. Ver el comando
+    de ayuda 'impl'.

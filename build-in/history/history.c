@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define HISTORY_PATH "/.shello_cmd_history"
+
 char* readf(FILE *file, int *__lines_count) { 
     int size = 1000;
     int lines = 1;
@@ -19,7 +21,7 @@ char* readf(FILE *file, int *__lines_count) {
 }
 
 int main(int argc, char** args){
-    FILE* hist = fopen("/shello_cmd_history", "r");
+    FILE* hist = fopen(HISTORY_PATH, "r");
     int linesCount = 0;
     char* text = readf(hist, &linesCount);
     char* line;

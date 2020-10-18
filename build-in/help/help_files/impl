@@ -1,0 +1,82 @@
+SHELLO IMPLEMENTATION
+
+    Shello es la implementación de un shell usando un lenguaje
+    muy similar a bach. 
+
+    TOKENS:
+
+        Token         Valor
+        --------------------
+        TEXT -------- Texto
+        IO_OUT ------ >
+        IO_OUT_A ---- >>
+        IO_IN ------- <
+        LOGIC_AND --- &&
+        LOGIC_OR ---- ||
+        PIPE -------- |
+        SEMICOLON --- ;
+        COND_IF ----- if
+        COND_ELSE --- else
+        COND_THEN --- then
+        COND_END ---- end
+
+
+    GRAMÁTICA:
+
+        CMD_LINE := LOGIC_CMD SEMICOLON CMD_LINE
+                | LOGIC_CMD
+
+        LOGIC_CMD := PIPED_CMD LOGIC_AND LOGIC_CMD
+                | PIPED_CMD LOGIC_OR LOGIC_CMD
+                | PIPED_CMD
+
+        PIPED_CMD := IO_CMD PIPE IO_CMD
+                | IO_CMD
+
+        IO_CMD := IF_CMD IO_ARG
+                | IF_CMD 
+                | SIMPLE_CMD
+
+        IF_CMD := COND_IF CMD_LINE COND_THEN CMD_LINE COND_ELSE CMD_LINE COND_END
+                | COND_IF CMD_LINE COND_THEN CMD_LINE COND_END
+                | COND_IF CMD_LINE COND_ELSE CMD_LINE COND_END
+
+        SIMPLE_CMD := TEXT ARGS
+                    | TEXT
+
+        ARGS := IO_ARG ARGS
+            | IO_ARG
+            | TEXT ARGS
+            | TEXT
+
+        IO_ARG := IO_SYM TEXT IO_SYM
+                | IO_SYM TEXT
+
+        IO_SYM := IO_OUT
+            | IO_OUT_A
+            | IO_IN
+
+
+    PROCESO:
+
+        Primero es leida la linea en el prompt.
+
+        Luego se extrae todo lo que esté antes de un # (comando de 
+        comentario)
+        
+        Después de esto se sutituyen los comando again (que no estén
+        dentro de comillas)
+
+        Luego el toquenizer se encarga de generar todos los tokens
+        necesarios.
+
+        Estos tokens mas adelantes son procesados por el parser el cual
+        genera una serie de estructuras anidadas que definen una línea
+        del prompt y cómo debe ser ejecutada.
+
+        Luego la línea es ñadida al history y ejecutada teniendo encuenta 
+        su estructura.
+
+        Si algún error ocurre en alguno de estos procesos es notificado 
+        en el shell con la mayor claridad posible y la línea en cuestión
+        no es añadida al history.

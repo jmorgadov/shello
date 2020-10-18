@@ -1,0 +1,36 @@
+El comando 'if' debe ser ejecutado en una de las sguientes formas:
+
+    if [COMANDO] else [COMANDO] end
+    if [COMANDO] then [COMANDO] end
+    if [COMANDO] then [COMANDO] else [COMANDO] end
+
+    Primero de ejecuta 'if [COMANDO]', si el exit status de COMANDO
+    es cero entonces se ejecuta 'then [COMANDO]' (si existe). En 
+    caso contrario 'else [COMANDO]' es ejecutado.
+
+    El exit status de una condicional es equivalente al exit status
+    del último comando ejecutado.
+
+    Eg.
+    
+    if echo a then echo b end
+    >>> a
+    >>> b
+
+    if echo a else echo b end
+    >>> a
+
+    Un COMANDO puede ser una lista de comandos separados por ; o
+    incluso puede ser otra condicional.
+
+    Eg.
+
+    if echo a; echo b then echo c else echo d end
+    >>> a
+    >>> b
+    >>> c
+
+    if echo a then if echo b else echo c end; echo d else echo e end
+    >>> a
+    >>> b
+    >>> d

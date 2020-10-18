@@ -28,6 +28,7 @@ Functionalities status:
 #include "./parser/ast_structs.h"
 #include <unistd.h>
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -106,6 +107,7 @@ void reset_line(int len){
 
 int main(int argc, char **args)
 {
+
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);
     printIntro();
@@ -113,6 +115,8 @@ int main(int argc, char **args)
     int buffer_index = 0;
     char current = 0;
     int reading = TRUE;
+    getcwd(cwd, 500);
+    set_init_path(strdup(cwd));
     while (TRUE)
     {
         getcwd(cwd, 500);
@@ -151,6 +155,7 @@ int main(int argc, char **args)
         if (buffer_index == 0)
             continue;
             
+        line_buff[buffer_index++] = ' ';
         line_buff[buffer_index] = 0;
         execute_shell_line(line_buff);       
     }    
