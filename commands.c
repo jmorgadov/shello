@@ -290,7 +290,7 @@ int is_digit(char c){
     return c >= '0' && c <= '9';
 }
 
-char* replace_again_commands(char* line)
+char* replace_again_commands(char* line, int* error)
 {
     int len = strlen(line);
     char* newLine = (char*)malloc(sizeof(char)*500);
@@ -298,14 +298,20 @@ char* replace_again_commands(char* line)
     int pos = 0;
     for (int i = 0; i < len; i++)
     {
-        if (starts_with(line + i, "again") && i > 0 && line[i - 1] != '\\'){
+        if (starts_with(line + i, "again") && (i == 0 || (i > 0 && line[i - 1] != '\\'))){
             int temp = i;
             temp += 5;
             while (line[temp] == ' ')
                 temp++;
             int np = 0;
-            while (is_digit(line[temp])){
+            while (temp < len && is_digit(line[temp])){
                 number[np++] = line[temp++];
+            }
+            if (np == 0){
+                *error = 1;
+                printc(BOLD_RED, "No number after \'again\' command\n");
+                printc(BOLD_YELLOW, "NOTE: If you want to escape \'again\' command type \'\\again\'\n");
+                return NULL;
             }
             number[np] = 0;
             char* hist_line = get_at(atoi(number) - 1, history);
@@ -328,16 +334,22 @@ char* replace_again_commands(char* line)
 void execute_shell_line(char* line){
     if (!history)
         history = init_history_handler();
+    int error = 0;
 
     char* l1 = separate_pipes(line);
-    char* l2 = replace_again_commands(strdup(l1));
+    char* l2 = replace_again_commands(strdup(l1), &error);
 
-    int error = 0;
-    char* line_repr = NULL;
-    command_line_t* cmd_line = parse_line(l2, &line_repr, &error);
     if (error){
         return;
     }
+
+    char* line_repr = NULL;
+    command_line_t* cmd_line = parse_line(l2, &line_repr, &error);
+
+    if (error){
+        return;
+    }
+
     add_line(line_repr, history);
     execute_comand_line(cmd_line);
 
