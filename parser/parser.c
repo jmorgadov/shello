@@ -15,6 +15,12 @@ char* cond[4] =  { "if", "then", "else", "end" };
 #define ELSE_ET 0b010
 #define END_ET  0b100
 
+void* print_error(char* message, int* error){
+    printc(BOLD_RED, "%s\n", message);
+    *error = 1;
+    return NULL;
+}
+
 int type_match_end_type(int type, int end_type){
     int b_type = 0;
     if (type == COND_THEN)
@@ -33,16 +39,26 @@ if_command_t* try_parse_if_cmd(token_t** tokens, int len, int* index, int* error
     if_cmd->if_command_line = try_parse_cmd_line(tokens, len, index, error, THEN_ET | ELSE_ET);
     if (*error){
         // ERROR PARSING IF COND
+        // return print_error("Message", error);
     }
     else{
+        if (*index >= len){
+            // ERROR NOT ELSE OR END COMMAND FOUND
+            return print_error("Token \'then\' or \'else\' not found after \'if\'", error);
+        }
         int last_cond_type = tokens[*index]->type;
         *index = *index + 1;
         if (last_cond_type == COND_THEN){
             if_cmd->then_command_line = try_parse_cmd_line(tokens, len, index, error, ELSE_ET | END_ET);
             if (*error){
                 // ERROR PARSING THEN COND
+                // return print_error("Message", error);
             }
             else{
+                if (*index >= len){
+                    // ERROR NOT ELSE OR END COMMAND FOUND
+                    return print_error("Token \'else\' or \'end\' not found after \'then\'", error);
+                }
                 last_cond_type = tokens[*index]->type;
                 *index = *index + 1;
             }            
@@ -52,8 +68,13 @@ if_command_t* try_parse_if_cmd(token_t** tokens, int len, int* index, int* error
             if_cmd->then_command_line = try_parse_cmd_line(tokens, len, index, error, END_ET);
             if (*error){
                 // ERROR PARSING ELSE COND
+                // return print_error("Message", error);
             }
             else{
+                if (*index >= len){
+                    // ERROR NOT ELSE OR END COMMAND FOUND
+                    return print_error("Token \'end\' not found after \'else\'", error);
+                }
                 last_cond_type = tokens[*index]->type;
                 *index = *index + 1;
             }
@@ -61,6 +82,7 @@ if_command_t* try_parse_if_cmd(token_t** tokens, int len, int* index, int* error
 
         if (last_cond_type != COND_END){
             // ERROR
+            return print_error("Token \'end\' not found", error);
         }
 
     }
@@ -84,6 +106,7 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
         if (current->type == IO_IN){
             if (*index + 1 >= len){
                 // ERROR NO PATH FOUND
+                return print_error("Path not found for command <", error);
             }
             *index = *index + 1;
             char* next_token_rep = get_token_repr(tokens[*index]);
@@ -92,11 +115,13 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
             }
             else{
                 // ERROR INVALID PATH
+                return print_error("Invalid path for command <", error);
             }
         }
         else if (current->type == IO_OUT){
             if (*index + 1 >= len){
                 // ERROR NO PATH
+                return print_error("Path not found for command >", error);
             }
             *index = *index + 1;
             char* next_token_rep = get_token_repr(tokens[*index]);
@@ -106,12 +131,14 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
             }
             else{
                 // ERROR INVALID PATH
+                return print_error("Invalid path for command >", error);
             }
 
         }
         else if (current->type == IO_OUT_A){
             if (*index + 1 >= len){
                 // ERROR NO PATH
+                return print_error("Path not found for command >>", error);
             }
             *index = *index + 1;
             char* next_token_rep = get_token_repr(tokens[*index]);
@@ -121,18 +148,21 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
             }
             else{
                 // ERROR INVALID PATH
+                return print_error("Invalid path for command >>", error);
             }
 
         }
         else if (is_symbol_token(current)){
             if (!command_parsed){
                 // ERROR NO COMMAND FOUND
+                return print_error("Command not found", error);
             }
             break;
         }
         else if (type_match_end_type(current->type, end_type)){
             if (!command_parsed){
                 // ERROR NO COMMAND FOUND
+                return print_error("Command not found", error);
             }
             // *index = *index + 1;
             break;
@@ -142,6 +172,7 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
             cmd->if_command = (void*)try_parse_if_cmd(tokens, len, index, error, end_type);
             if (*error){
                 // ERROR PARSING IF CMD
+                return NULL;
             }
             command_parsed = 2;
             *index = *index - 1;
@@ -155,11 +186,15 @@ command_t* try_parse_cmd(token_t** tokens, int len, int* index, int* error, int 
         }
         else if (command_parsed == 2){
             // ERROR UNESPECTED TOKEN
+            printc(BOLD_RED, "Unspected token \'%s\'\n", token_repr);
+            *error = 1;
+            return NULL;
         }
     }
 
     if (!command_parsed){
         // ERROR NO COMMAND FOUND
+        return print_error("No command found", error);
     }
 
     cmd_args[args_index] = NULL;
@@ -176,12 +211,14 @@ piped_command_t* try_parse_piped_cmd(token_t** tokens, int len, int* index, int*
     ppc->command = try_parse_cmd(tokens, len, index, error, end_type);
     if (*error){
         // ERROR PARSING LOGIC COMMAND
+        // return print_error("Message", error);
     }
     else if (*index < len - 1 && tokens[*index]->type == PIPE){
         *index = *index + 1;
         ppc->piped_command = (void*)try_parse_piped_cmd(tokens, len, index, error, end_type);
         if (*error){
             // ERROR PARSING CMD
+            // return print_error("Message", error);
         }
     }
     else{
@@ -195,6 +232,7 @@ logic_command_t* try_parse_logic_cmd(token_t** tokens, int len, int* index, int*
     lc->piped_command = try_parse_piped_cmd(tokens, len, index, error, end_type);
     if (*error){
         // ERROR PARSING PIPED CMD
+        // return print_error("Message", error);
     }
     else if (*index < len - 1 && tokens[*index]->type == LOGIC_AND){
         *index = *index + 1;
@@ -202,6 +240,7 @@ logic_command_t* try_parse_logic_cmd(token_t** tokens, int len, int* index, int*
         lc->logic_command = try_parse_logic_cmd(tokens, len, index, error, end_type);
         if (*error){
             // ERROR PARSING LOGIC_CMD
+            // return print_error("Message", error);
         }
     }
     else if (*index < len - 1 && tokens[*index]->type == LOGIC_OR){
@@ -210,6 +249,7 @@ logic_command_t* try_parse_logic_cmd(token_t** tokens, int len, int* index, int*
         lc->logic_command = try_parse_logic_cmd(tokens, len, index, error, end_type);
         if (*error){
             // ERROR PARSING LOGIC_CMD
+            // return print_error("Message", error);
         }
     }
     else{
@@ -224,12 +264,14 @@ command_line_t* try_parse_cmd_line(token_t** tokens, int len, int* index, int* e
     cmd->logic_command = try_parse_logic_cmd(tokens, len, index, error, end_type);
     if (*error){
         // ERROR PARSING LOGIC COMMAND
+        // return print_error("Message", error);
     }
     else if (*index < len - 1 && tokens[*index]->type == SEMICOLON){
         *index = *index + 1;
         cmd->command_line = (void*)try_parse_cmd_line(tokens, len, index, error, end_type);
         if (*error){
             // ERROR PARSING CMD_LINE
+            // return print_error("Message", error);
         }
     }    
     else{
