@@ -100,6 +100,16 @@ int execute_command(command_t* command){
             strcat(help_path, "/build-in/help/help.out");
             command->name = help_path;
             command->args[0] = help_path;
+            if (command->args[1]){
+                char* comm = strdup(command->args[1]);
+                command->args[1] = strdup(initial_path);
+                command->args[2] = comm;
+                command->args[3] = NULL;
+            }
+            else{
+                command->args[1] = strdup(initial_path);
+                command->args[2] = NULL;
+            }
         }
 
         if (COMMAND_IS_("history")){
